@@ -1,10 +1,10 @@
 import BaseConfig from "./base"
 
-export function getGoodDetail(iid) {
+export function getGoodDetail(id) {
     return BaseConfig({
         url: "/detail",
         params: {
-            iid
+            id
         }
     })
 }

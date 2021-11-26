@@ -1,6 +1,8 @@
 <template>
-  <nav-bar>
-    <div slot="left" class="btn" />
+  <nav-bar class="nav">
+    <div slot="left" class="btn" @click="$router.go(-1)">
+      <img src="~assets/img/common/left-arrow.svg" alt=""/>
+    </div>
     <search slot="center" :message="'请输入商品分类信息'" />
     <div slot="right" class="btn" />
   </nav-bar>
@@ -22,4 +24,5 @@ export default {
   align-items: center;
   height: 100%;
 }
+
 </style>

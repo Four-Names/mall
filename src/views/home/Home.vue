@@ -1,9 +1,21 @@
 <template>
   <div id="home">
-    <nav-bar ref="bar">
-      <div slot="center">主页</div>
+    <nav-bar ref="bar" class="background">
+      <img
+        slot="left"
+        src="~img/home/category.svg"
+        alt=""
+        @click="$router.push('/category')"
+      />
+      <search slot="center" :message="''" />
+      <img
+        slot="right"
+        src="~img/home/my.svg"
+        alt=""
+        @click="$router.push('/my')"
+      />
     </nav-bar>
-    <div v-show="loadDone">
+    <div v-show="loadDone" class="scroll">
       <tab-control
         :titles="titles"
         @tabClick="tabClick"
@@ -42,8 +54,7 @@
 <script>
 import NavBar from "components/common/NavBar/NavBar";
 import Scroll from "components/common/Scroll/Scroll";
-
-import { getHomeMultidata, getHomeGoods } from "network/home";
+import Search from "components/common/Search/Search";
 
 import HomeRecommond from "./child/HomeRecommond";
 import HomeSwiper from "./child/HomeSwiper";
@@ -87,45 +98,21 @@ export default {
     GoodList,
     Scroll,
     BackTop,
+    Search,
   },
   created() {
-    //获取tabbar、swiper、featrueview数据
-    this.getHomeMultidata();
+    this.getHomeData();
 
     //获取商品封面数据
-    this.getHomeGoods("pop");
-    this.getHomeGoods("sell");
-    this.getHomeGoods("new");
+    this.getHomeGood("pop");
+    this.getHomeGood("sell");
+    this.getHomeGood("new");
+    //闭包函数实现防抖
   },
   methods: {
-    //获取首页轮播图、小圆窗数据
-    getHomeMultidata() {
-      getHomeMultidata()
-        .then((res) => {
-          this.banners = res.data.data.banner.list;
-          this.recommends = res.data.data.recommend.list;
-        })
-        .catch(() => {
-          this.$toast.show("获取数据失败，请稍后刷新或检查网络问题");
-        });
-    },
-
-    // 获取对应商品封面数据
-    getHomeGoods(type = this.type) {
-      const page = ++this.goods[type].page;
-      getHomeGoods(type, page)
-        .then((res) => {
-          this.goods[type].list.splice(0, 0, ...res.data.data.list);
-          this.loadDone++;
-        })
-        .catch(() => {
-          this.$toast.show("获取数据失败，请稍后刷新或检查网络问题");
-        });
-    },
-
     //加載更多
     loadMore() {
-      this.getHomeGoods(); //获取商品数据
+      this.getHomeGood(); //获取商品数据
     },
 
     //tabi点击切换商品视图
@@ -139,6 +126,32 @@ export default {
       this.IsBottom = tag;
       this.ceiling = tag;
     },
+
+    //获取tabbar、swiper、featrueview数据
+    getHomeData() {
+      this.$axios
+        .get("/home/data")
+        .then((res) => {
+          this.banners = res.data.data.banner;
+          this.recommends = res.data.data.recommend;
+        })
+        .catch();
+    },
+
+    // 获取对应商品封面数据
+    getHomeGood(type = this.type) {
+      const page = ++this.goods[type].page;
+      this.$axios
+        .get(`/home/good?type=${type}&page=${page}`)
+        .then((res) => {
+          this.goods[type].list.splice(0, 0, ...res.data.data);
+          this.loadDone++;
+        })
+        .catch();
+    },
+  },
+  mounted() {
+    this.refreSher = debounce(this.$refs.scroll?.refresh);
   },
   computed: {
     CurrentGoods() {
@@ -149,26 +162,12 @@ export default {
       return this.ceiling ? "wrapper1" : "wrapper";
     },
   },
-  activated() {
-    if (this.loadDone == 3) {
-      this.$refs.scroll.scrollTo(0, this.posY, 1);
-    }
-    if (this.refreSher) this.refreSher();
-  },
-  deactivated() {
-    if (this.loadDone == 3) {
-      this.posY = this.$refs.scroll.getY();
-    }
-  },
   watch: {
     loadDone(newV) {
       if (newV == 6) {
         //打开scrollup与backtop监听
         this.$refs.scroll.openPullUp();
         this.$refs.scroll.openBackTop();
-
-        //闭包函数实现防抖
-        this.refreSher = debounce(this.$refs.scroll.refresh);
 
         //获取吸顶组件上方的navbar所占的高度以计算固定值
         const offset = this.$refs.bar.$el.offsetHeight;
@@ -177,27 +176,42 @@ export default {
     },
   },
   activated() {
+    console.log(this.posY, "posy");
     this.$bus.$on(this.loadName, () => {
-      this.refreSher();
+      this?.refreSher();
     });
+    if (this.loadDone == 3) {
+      this.$refs.scroll.scrollTo(0, this.posY, 4);
+    }
+    console.log(this.ClassWrapper, this.ceiling);
   },
   deactivated() {
-    this.$bus.$off(this.loadName)
+    this.posY = this.$refs.scroll.getY();
+    console.log(this.posY, "posy");
+    this.$bus.$off(this.loadName);
   },
 };
 </script>
 <style scoped>
-.homve-nav {
-  background-color: aqua;
+#home {
+  background-color: white;
+}
+
+.scroll{
+  height: 92.6vh;
 }
 
 .wrapper {
-  height: 90vh;
+  height: 86.6vh;
   overflow: hidden;
 }
 
 .wrapper1 {
-  height: 84vh;
+  height: 79.9vh;
   overflow: hidden;
+}
+
+.background {
+  background: linear-gradient(rgb(221, 0, 0), #ff1717);
 }
 </style>

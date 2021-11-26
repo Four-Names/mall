@@ -20,16 +20,16 @@
         全选
       </div>
     </div>
-    <div @click="isEditing = !isEditing">
+    <div>
       <div v-show="isEditing" class="feature-btn">
-        <div class="btn" @click="collect"><span>加入关注</span></div>
+        <div class="btn" @click="collect" v-if="isLogin"><span>加入收藏</span></div>
         <div class="btn" @click="remove"><span>删除</span></div>
       </div>
     </div>
 
     <div v-show="!isEditing" class="price-check">
       <p>总计:￥{{ formatPrice }}</p>
-      <span class="checkstand" :class="ifCanCheck">去结算{{ reCount }}件</span>
+      <span class="checkstand" :class="ifCanCheck" @click="$router.push('/cart/confirm')">去结算{{ reCount }}件</span>
     </div>
   </div>
 </template>
@@ -48,10 +48,13 @@ export default {
       this.isEditing = isEditing;
     });
   },
-
+  deactivated() {
+    this.$bus.$off("editing");
+    this.isEditing = false;
+  },
   computed: {
     ...mapGetters(["ifAllShopChoosed", "reCount"]),
-    ...mapState(["shopNum", "totalPrice"]),
+    ...mapState(["shopNum", "totalPrice","isLogin"]),
 
     //是否锁定按钮
     ifLock() {
@@ -72,18 +75,16 @@ export default {
     ...mapMutations(["chooseAllShop", "unChooseAllShop"]),
     remove() {
       this.$bus.$emit("executeDelete");
-      this.$toast.show("删除成功");
     },
     collect() {
       this.$bus.$emit("executeCollect");
-      this.$toast.show("关注成功");
     },
   },
 };
 </script>
 <style scoped>
 .settlement {
-  height: 6vh;
+  height: 7.4vh;
   box-sizing: border-box;
   width: 100vw;
   display: flex;
@@ -93,7 +94,7 @@ export default {
   padding-left: 4vw;
   padding-right: 3vw;
   position: fixed;
-  bottom: 6vh;
+  bottom: 7.4vh;
   background-color: rgba(255, 255, 255, 0.95);
 }
 
@@ -129,8 +130,8 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  border-radius: 2.5vh;
-  height: 5vh;
+  border-radius: 3vh;
+  height: 6vh;
   margin: 0px 3px;
   width: 100px;
 }

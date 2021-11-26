@@ -17,6 +17,6 @@ export default {
 }
 
 .back-top img {
-  width: 6vh;
+  width: 7.4vh;
 }
 </style>

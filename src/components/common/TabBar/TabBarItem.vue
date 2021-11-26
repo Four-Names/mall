@@ -30,13 +30,13 @@ export default {
   },
   methods: {
     itemClick() {
-      if (this.$route.path.indexOf(this.path) === -1)
+      if (!this.$route.path.includes(this.path))
         this.$router.replace(this.path);
     },
   },
   computed: {
     isActive() {
-      return this.$route.path.indexOf(this.path) !== -1;
+      return this.$route.path.includes(this.path);
     },
   },
 };
@@ -58,7 +58,7 @@ export default {
 
 .tab-bar-text {
   color: #8a8a8a;
-  font-size: 1.5vh;
+  font-size: 2vh;
   display: flex;
   justify-content: center;
   align-items: center;

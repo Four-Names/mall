@@ -1,10 +1,12 @@
 <template>
-  <nav-bar>
-    <div slot="left" class="btn">
-      <img src="~assets/img/common/left-arrow.svg" alt="" @click="back" />
-    </div>
-
-    <div slot="center" class="title">
+  <common-nav-bar
+  :home="true"
+  :viewed="true"
+  :collect="true"
+  :category="true"
+  :my="true"
+  >
+    <div slot="content" class="title">
       <div
         v-for="(item, index) in titles"
         :key="index"
@@ -15,18 +17,14 @@
         {{ item }}
       </div>
     </div>
-
-    <div slot="right" class="btn">
-      <img src="~assets/img/common/menu.svg" alt="" @click="menu" />
-    </div>
-  </nav-bar>
+  </common-nav-bar>
 </template>
 
 <script>
 import NavBar from "components/common/NavBar/NavBar";
-
+import CommonNavBar from "components/common/NavBar/CommonNavBar";
 export default {
-  components: { NavBar },
+  components: { NavBar, CommonNavBar },
   props: {
     cursor: {
       type: Number,
@@ -39,6 +37,7 @@ export default {
     return {
       titles: ["商品", "参数", "评论", "推荐"],
       currentIndex: 0,
+      showMenu: false,
     };
   },
 
@@ -52,7 +51,7 @@ export default {
       this.$router.back();
     },
     menu() {
-      this.$toast.show("尚未开发\n敬请期待");
+      this.showMenu = !this.showMenu;
     },
   },
 
@@ -82,5 +81,48 @@ export default {
 
 .active {
   color: red;
+}
+
+.triangle {
+  top: 5vh;
+  right: 22px;
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 8px solid transparent;
+  border-bottom: 8px solid rgba(25, 25, 25, 0.9);
+}
+
+.menu {
+  top: calc(5vh + 16px);
+  right: 10px;
+  background-color: rgba(25, 25, 25, 0.9);
+  width: 120px;
+  padding: 10px 0;
+  position: absolute;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.row {
+  display: flex;
+  height: 35px;
+  justify-content: center;
+  align-items: center;
+  padding: 2px 0;
+}
+
+.icon {
+  width: 26px;
+}
+
+.desc {
+  color: white;
+  width: 80px;
+  font-size: 14px;
 }
 </style>

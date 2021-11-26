@@ -1,13 +1,17 @@
 <template>
-
-  <swiper :options="swiperOption" ref="mySwiper">
-    <swiper-slide v-for="(item, id) in banners" :key="id">
-      <a :href="item.link">
-        <img :src="item.image" alt="" @load="imgLoad" />
-      </a>
-    </swiper-slide>
-
-  </swiper>
+  <div class="father">
+    <div id="swiper">
+      <swiper :options="swiperOption" ref="mySwiper">
+        <swiper-slide v-for="(item, id) in banners" :key="id" class="img">
+          <a :href="item.link">
+            <img :src="item.image" alt="" @load="imgLoad" />
+          </a>
+        </swiper-slide>
+        <div class="swiper-pagination" slot="pagination"></div>
+      </swiper>
+    </div>
+    <div class="backgroud"></div>
+  </div>
 </template>
 
 <script>
@@ -34,6 +38,10 @@ export default {
           stopOnLastSlide: false,
           disableOnInteraction: false,
         },
+        pagination: {
+          el: ".swiper-pagination",
+          type: "bullets",
+        },
       },
     };
   },
@@ -54,10 +62,29 @@ export default {
 };
 </script>
 <style scoped>
-img{
+img {
   width: 100vw;
+  height: 25vh;
 }
-a{
-  
+
+.father {
+  display: flex;
+  position: relative;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0;
+}
+#swiper {
+  width: 90vw;
+  border-radius: 10px;
+}
+.backgroud {
+  position: absolute;
+  top: 0;
+  width: 100vw;
+  height: 75%;
+  border-bottom-left-radius: 40px;
+  border-bottom-right-radius: 40px;
+  background: linear-gradient(#ff1717, #e66465);
 }
 </style>

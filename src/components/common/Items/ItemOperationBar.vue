@@ -1,5 +1,5 @@
 <template>
-  <div class="operation-bar" v-show="isEditing">
+  <div class="operation-bar" >
     <div>
       <div
         class="choosed"
@@ -40,12 +40,6 @@ export default {
         return false;
       },
     },
-    isEditing: {
-      type: Boolean,
-      default() {
-        return false;
-      },
-    },
     hasChoosed: {
       type: Boolean,
       default() {
@@ -78,6 +72,7 @@ export default {
   position: fixed;
   z-index: 5;
   bottom: 0;
+  background-color: white;
 }
 .choosed {
   display: flex;

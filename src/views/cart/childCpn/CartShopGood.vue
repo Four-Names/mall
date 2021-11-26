@@ -70,11 +70,11 @@ export default {
     Collect(goodId) {
       this.goodCollected(this.getCartGoodInfo(goodId));
 
-      this.$toast.show("关注成功");
+      this.$message.success("收藏成功");
     },
 
     Uncollect(goodId) {
-       this.$toast.show("取消关注");
+      this.$message.success("取消收藏");
       this.goodUnCollect(goodId);
     },
 
@@ -93,7 +93,6 @@ export default {
   computed: {
     ...mapGetters(["ifShopActive"]),
   },
-
 };
 </script>
 <style scoped>

@@ -8,10 +8,10 @@ module.exports = {
                 'components':'@/components',
                 'store':'@/store',
                 'views':'@/views',
-                'img':'assets/img'
+                'img': 'assets/img',
+                'api':'@/api'
             }
         },
     },
-    publicPath: './'
-
+    publicPath: './',
 }

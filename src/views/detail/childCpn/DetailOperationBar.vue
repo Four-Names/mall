@@ -10,9 +10,10 @@
         <p>店铺</p>
       </div>
       <div class="fun_btn" @click="goCart">
-        <img src="~img/common/cart.svg" alt="" />
+        <el-badge :value="goodsNum" :max="99" class="item">
+          <img src="~img/common/cart.svg" alt="" />
+        </el-badge>
         <p>购物车</p>
-        <span class="num">{{ $store.state.goodsNum }}</span>
       </div>
     </div>
     <div class="fun_btn2">
@@ -27,11 +28,15 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
 export default {
   data() {
     return {
       ifStar: false,
     };
+  },
+  computed: {
+    ...mapState(["goodsNum"]),
   },
   methods: {
     goCart() {
@@ -42,7 +47,7 @@ export default {
 </script>
 <style scoped>
 .detail_operation_main {
-  height: 6vh;
+  height: 7.4vh;
   font-size: 1rem;
   position: fixed;
   bottom: 0;
@@ -56,13 +61,13 @@ export default {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  width: 45%;
+  width: 40%;
 }
 
 .fun_btn {
   display: grid;
   justify-items: center;
-  font-size: 1.5vh;
+  font-size: 2vh;
   color: grey;
   position: relative;
 }
@@ -75,22 +80,18 @@ img {
   align-items: center;
   justify-content: space-around;
   color: white;
-  width: 55%;
+  width: 60%;
   font-size: 2vh;
   font-weight: 800;
   padding: 0 5px;
 }
-.fun_btn2 > p {
-  /* height: 5vh; */
-}
+
 .buy {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* height: 38px; */
-  height: 5vh;
-
-  border-radius: 2vh;
+  height: 6vh;
+  border-radius: 3vh;
   width: calc(50% - 10px);
   background-color: #fcbc0c;
 }
@@ -99,27 +100,9 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* height: 38px; */
-  height: 5vh;
-
-  border-radius: 2vh;
+  height: 6vh;
+  border-radius: 3vh;
   width: calc(50% - 10px);
-
   background-color: #f4200c;
-}
-.num {
-  position: absolute;
-  right: 0;
-  top: -5px;
-  width: 17px;
-  height: 17px;
-  background-color: red;
-  color: white;
-  border-radius: 50%;
-  justify-content: center;
-  align-items: center;
-  display: flex;
-  font-size: 0.7rem;
-  font-weight: 500;
 }
 </style>

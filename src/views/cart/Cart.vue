@@ -1,24 +1,47 @@
 <template>
   <div>
-    <item-nav-bar text="购物车" :close="cartIsEmpty" />
-    <scroll class="cartGood" ref="scroll" @ifBottom="ifBottom" :backTimer="300">
-      <cart-good-list ref="goodList" />
-      <recommend
-        ref="recommend"
-        v-show="goodRecommend"
-        :goodRecommend="goodRecommend"
-        :loadName="RecommendLoad"
-      />
-    </scroll>
-    <back-top class="backTop" @click.native="backTop" v-show="IsBottom" />
-    <cart-operation-bar ref="checkOut" v-show="!cartIsEmpty" />
+    <router-view />
+    <div v-show="main">
+      <scroll
+        class="cartGood"
+        ref="scroll"
+        @ifBottom="ifBottom"
+        :backTimer="300"
+      >
+        <item-nav-bar text="购物车" :close="cartIsEmpty" class="line" />
+        <cart-login-bar v-if="!isLogin" />
+        <div class="content" v-if="!isLogin">
+          <div>
+            <img src="~img/cart/null.svg" alt="" />
+          </div>
+          <p>登录后可同步购物车中商品</p>
+        </div>
+
+        <div class="goodList" v-if="shopNum">
+          <cart-shop-good
+            v-for="(shop, index) in shopList"
+            :key="index"
+            :shopInfo="shop"
+            :shopId="shop.id"
+            ref="goodList"
+          />
+        </div>
+        <recommend
+          ref="recommend"
+          :loadName="RecommendLoad"
+          v-show="!isEditing || !shopNum"
+        />
+      </scroll>
+      <back-top class="backTop" @click.native="backTop" v-show="IsBottom" />
+      <cart-operation-bar ref="checkOut" v-show="!cartIsEmpty" />
+    </div>
   </div>
 </template>
 <script>
-import CartGoodList from "./childCpn/CartGoodList";
 import CartOperationBar from "./childCpn/CartOperationBar";
+import CartLoginBar from "./childCpn/CartLoginBar";
+import CartShopGood from "./childCpn/CartShopGood";
 
-import { getGoodRecommend } from "network/detail";
 import BackTop from "components/content/BackTop/BackTop";
 
 import { debounce } from "common/utils";
@@ -27,7 +50,7 @@ import Recommend from "components/common/Recommend/Recommend";
 
 import ItemNavBar from "components/common/Items/ItemNavBar";
 
-import { mapGetters } from "vuex";
+import { mapGetters, mapMutations, mapState } from "vuex";
 
 export default {
   name: "Cart",
@@ -39,37 +62,43 @@ export default {
       IsBottom: false,
       refresher: null,
       close: false,
+      isEditing: false,
+      msg: null,
     };
   },
   components: {
-    CartGoodList,
     Scroll,
     BackTop,
     Recommend,
     ItemNavBar,
     CartOperationBar,
+    CartLoginBar,
+    CartShopGood,
   },
   computed: {
     ...mapGetters(["cartIsEmpty"]),
+    ...mapState(["shopList", "isLogin", "shopNum"]),
+    main(){
+      return this.$route.name == 'Cart';
+    }
   },
   mounted() {
-    getGoodRecommend()
-      .then((res) => {
-        this.goodRecommend = res.data.data.list;
-      })
-      .catch(() => {
-        this.$toast.show("获取数据失败，请稍后刷新或检查网络问题");
-      });
     this.close = this.$refs.scroll.openBackTop();
     this.$refs.scroll.openPullUp();
 
-    this.refresher = debounce(this.$refs.scroll.refresh);
+    // this.refresher = debounce(this.$refs.scroll?.refresh);
+    this.refresher = debounce(() => {
+      this.$nextTick(() => {
+        this.$refs.scroll?.refresh();
+      });
+    });
 
     this.$bus.$on(this.RecommendLoad, () => {
-      this.refresher();
+      this?.refresher();
     });
   },
   methods: {
+    ...mapMutations(["setLogin"]),
     backTop() {
       this.$refs.scroll.BackTop();
     },
@@ -80,31 +109,47 @@ export default {
   activated() {
     this.refresher?.();
     if (this.cartIsEmpty) {
-      this.$toast.show("购物车空空如也", 1000);
+      this.msg = this.$message("购物车空空如也");
     }
+    if (!localStorage.token) {
+      this.setLogin(false);
+    }
+    this.$bus.$on("editing", (isEditing) => {
+      this.isEditing = isEditing;
+    });
   },
   deactivated() {
     this.posY = this.$refs.scroll.getY();
-
     this.$bus.$off("editing");
+    this.msg?.close();
   },
-
   //刷新BS
   updated() {
-    this.refresher();
+    this?.refresher();
   },
 };
 </script>
 <style scoped>
 .cartGood {
-  /* height: calc(100vh - 96px); */
-  height: 89vh;
-  /* height: 95vh;  */
-
+  height: 92.6vh;
   overflow: hidden;
 }
 
 .backTop {
   bottom: 120px;
+}
+.line {
+  border-bottom: 1px solid rgb(229, 229, 229);
+}
+.content {
+  height: 40vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+}
+.goodList {
+  padding-bottom: 13.4vh;
 }
 </style>

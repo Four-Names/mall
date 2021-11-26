@@ -1,5 +1,5 @@
 <template>
-  <div class="base-info">
+  <div class="base-info" v-show="goodInfo">
     <div class="title">
       <span>{{ goodInfo.title }}</span>
     </div>
@@ -15,18 +15,18 @@
           {{ goodInfo.discount }}
         </span>
       </div>
-      <div class="star" @click="collect = !collect">
+      <div class="star" @click="collect = !collect" >
         <img
-          v-show="goodIfCollected(goodId)"
+          v-show="collect"
           src="~img/common/collect.svg"
           alt=""
-          @click="$emit('Uncollect')"
+          @click="Uncollect"
         />
         <img
-          v-show="!goodIfCollected(goodId)"
+          v-show="!collect"
           src="~img/common/no-collect.svg"
           alt=""
-          @click="$emit('Collect')"
+          @click="Collect"
         />
       </div>
     </div>
@@ -44,7 +44,7 @@
 </template>
 
 <script>
-import { mapGetters, mapMutations } from "vuex";
+import { mapGetters, mapMutations, mapState } from "vuex";
 export default {
   name: "DetailBaseInfo",
   props: {
@@ -66,17 +66,46 @@ export default {
         return "";
       },
     },
+    goodObj: {
+      type: Object,
+      default() {
+        return {};
+      },
+    },
   },
   data() {
     return {
       defaultServices: ["退货补运费", "全国包邮", "7天无忧退货"],
-      collect: this.ifCollect,
+      collect: false,
     };
+  },
+  created() {
+    this.collect = this.goodIfCollected(this.goodId);
   },
   computed: {
     ...mapGetters(["goodIfCollected"]),
+    ...mapState(["isLogin"]),
     ifHasDiscount() {
       return this.goodInfo.discount ? "price-discount" : "";
+    },
+  },
+  methods: {
+    ...mapMutations(["goodCollected", "goodUnCollect"]),
+    Collect() {
+      if (this.isLogin) {
+        console.log(this.goodObj, "collect");
+        this.goodCollected({ ...this.goodObj });
+
+        this.$message.success("收藏成功");
+      } else {
+        this.$router.push({ path: "/login" });
+      }
+    },
+
+    Uncollect() {
+      console.log(this.goodObj, "uncollect");
+        this.$message.success("取消收藏");
+      this.goodUnCollect(this.goodId);
     },
   },
 
@@ -107,7 +136,7 @@ export default {
   padding-right: 15px;
 }
 .new-price {
-  font-size: 1.6rem;
+  font-size: 1.3rem;
   padding-left: 0.7rem;
 }
 .old-price {
@@ -115,10 +144,12 @@ export default {
   font-size: 0.8rem;
 }
 .discount {
+  bottom: 0;
   color: white;
-  font-size: 1.6rem;
+  font-size: 1rem;
   background-color: deeppink;
   border-radius: 10px 0 0 0;
+  border-bottom: 5px solid deeppink;
   padding-right: 5px;
 }
 

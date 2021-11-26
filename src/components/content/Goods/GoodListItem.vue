@@ -1,6 +1,5 @@
 <template>
   <div class="good-item">
-
     <img
       v-lazy="showImage"
       :key="showImage"
@@ -13,10 +12,9 @@
 
     <div class="good-info">
       <span>{{ parseFloat(goodsItem.price) }}￥</span>
-      <img src="~img/common/collect.svg" alt="">
+      <img src="~img/common/collect.svg" alt="" />
       <span>{{ goodsItem.cfav }}</span>
     </div>
-    
   </div>
 </template>
 
@@ -45,36 +43,30 @@ export default {
     };
   },
   computed: {
-
     showImage() {
       return (
         this.goodsItem.image || this.goodsItem.img || this.goodsItem.show.img
       );
     },
 
-    imgUrl() {
-      return (
-        this.goodsItem.iid || this.goodsItem.link || this.goodsItem.item_url
-      );
+    id() {
+      return this.goodsItem.iid;
     },
-
   },
   created() {
     this.load = debounce(this.imgload);
   },
   methods: {
-
     //转到对应的页面
     itemClick() {
-      this.$router.push({ path: "/detail", query: { id: this.imgUrl } });
+      // console.log(this.$route,this.$router);
+      this.$router.push({ path: "/detail", query: { id: this.id } });
     },
-    
+
     //事件总线分发图片加载事件
     imgload() {
       this.$bus.$emit(this.loadName);
     },
-
-
   },
 };
 </script>
@@ -90,15 +82,13 @@ export default {
 }
 
 .good-item p {
-  /* font-size: 0.8rem; */
-  font-size: 1.5vh;
+  font-size: 2vh;
   text-align: center;
   margin: 2px 0 3px;
 }
 
 .good-info {
-  /* font-size: 0.7rem; */
-  font-size: 1.5vh;
+  font-size: 2vh;
 
   text-align: center;
   display: flex;
@@ -109,9 +99,8 @@ export default {
   color: deeppink;
   margin-right: 10px;
 }
-.good-info>img{
-  /* height: 14px; */
-  width: 1.5vh;
+.good-info > img {
+  width: 2vh;
 }
 
 .good-price {

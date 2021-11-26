@@ -41,7 +41,7 @@ export default {
   display: flex;
   text-align: center;
   font-size: 1rem;
-  line-height: 5vh;
+  line-height: 6.7vh;
   font-size: 2vh;
 }
 

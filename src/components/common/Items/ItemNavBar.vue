@@ -4,8 +4,8 @@
       <img src="~assets/img/common/left-arrow.svg" alt="" @click="back" />
     </div>
     <div slot="center" class="center">{{ text }}</div>
-    <div slot="right" class="btn" @click="editing = !editing">
-      <div v-show="!close">
+    <div slot="right" class="btn" @click="edit">
+      <div v-show="!close" class="text">
         <div v-show="!editing">编辑</div>
         <div v-show="editing">完成</div>
       </div>
@@ -45,12 +45,12 @@ export default {
   methods: {
     back() {
       if (this.path) this.$router.replace(this.path);
-      else this.$router.back();
+      else this.$router.go(-1);
     },
-  },
-  watch: {
-    editing(newV) {
-      this.$bus.$emit("editing", newV);
+    edit() {
+      this.editing = !this.editing;
+      console.log('emit',this.editing);
+      this.$bus.$emit("editing", this.editing);
     },
   },
   deactivated() {
@@ -65,6 +65,8 @@ export default {
   justify-content: center;
   align-items: center;
   height: 100%;
-  font-weight: 600;
+}
+.text {
+  font-size: 2vh;
 }
 </style>

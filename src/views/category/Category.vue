@@ -1,9 +1,9 @@
 <template>
   <div>
-    <category-nav-bar />
+    <category-nav-bar class="line" />
 
     <div class="category_main">
-      <scroll :class="applyClass" ref="category">
+      <scroll class="category" ref="category" :scrollBar="false">
         <category-left-bar
           v-for="(item, index) in Categorys"
           :key="index"
@@ -50,11 +50,6 @@ import TabControl from "components/content/Tab/TabControl";
 
 import { debounce } from "common/utils";
 
-import {
-  getCategory,
-  getCategoryGoods,
-  getCategoryGoodsDetail,
-} from "network/category";
 export default {
   name: "Category",
   data() {
@@ -87,14 +82,12 @@ export default {
     TabControl,
   },
   created() {
-    getCategory()
+    this.getCategory()
       .then((res) => {
-        this.Categorys = res.data.data.category.list;
+        this.Categorys = res.data.data;
         this.chooseCategory = 0;
       })
-      .catch(() => {
-        this.$toast.show("获取数据失败，请稍后刷新或检查网络问题");
-      });
+      .catch();
     //防抖doneView
     this.done = debounce(this.doneView);
   },
@@ -103,12 +96,6 @@ export default {
     //打开bs
     this.$refs.category.openPullUp();
     this.$refs.goods.openPullUp();
-
-    //出于未知原因我手机的chrome浏览器布局出现问题，故需切换到支持的class
-    const ifLowChrome = navigator.userAgent.match(/Chrome\/\d+/i);
-    if (ifLowChrome) {
-      this.ifLowChrome = ifLowChrome.toString().match(/\d{1}/i) < 8;
-    }
   },
   activated() {
     this.$refs.category?.refresh();
@@ -149,32 +136,39 @@ export default {
 
     //加载type商品信息
     loadType() {
-      const popT = getCategoryGoodsDetail(this.miniWallkey, "pop");
-      const newT = getCategoryGoodsDetail(this.miniWallkey, "new");
-      const sellT = getCategoryGoodsDetail(this.miniWallkey, "sell");
+      const popT = this.getCategoryGoodsDetail(this.miniWallkey, "pop");
+      const newT = this.getCategoryGoodsDetail(this.miniWallkey, "new");
+      const sellT = this.getCategoryGoodsDetail(this.miniWallkey, "sell");
       Promise.all([popT, newT, sellT])
         .then((res) => {
-          this.goods["pop"] = res[0].data;
-          this.goods["new"] = res[1].data;
-          this.goods["sell"] = res[2].data;
+          this.goods["pop"] = res[0].data.data;
+          this.goods["new"] = res[1].data.data;
+          this.goods["sell"] = res[2].data.data;
         })
         .catch(() => {
-          this.$toast.show("获取数据失败，请稍后刷新或检查网络问题");
+          // this.$message.warning("获取数据失败，请稍后刷新或检查网络问题");
         });
     },
     isEnd(index) {
       return this.Categorys.length - 1 == index;
+    },
+
+    getCategory() {
+      return this.$axios.get(`/category`);
+    },
+    getCategoryGoods(maitKey) {
+      return this.$axios.get(`/category/detail?maitKey=${maitKey}`);
+    },
+    getCategoryGoodsDetail(miniWallkey, type) {
+      return this.$axios.get(
+        `/category/detail/good?miniWallkey=${miniWallkey}&type=${type}`
+      );
     },
   },
   computed: {
     //返回所点标题对应商品
     CurrentGoods() {
       return this.goods[this.type];
-    },
-
-    //依据浏览器版本切换class
-    applyClass() {
-      return this.ifLowChrome ? "chrome_category" : "category";
     },
   },
   watch: {
@@ -189,14 +183,14 @@ export default {
 
     //改变时获取对应的数据
     maitKey(newV) {
-      getCategoryGoods(newV)
+      this.getCategoryGoods(newV)
         .then((res) => {
-          this.categoryViews = res.data.data.list;
+          this.categoryViews = res.data.data;
           if (this.$refs.goods) this.$refs.goods.BackTop();
           this.loadType();
         })
         .catch(() => {
-          this.$toast.show("获取数据失败，请稍后刷新或检查网络问题");
+          // this.$message.warning("获取数据失败，请稍后刷新或检查网络问题");
         });
     },
   },
@@ -207,20 +201,14 @@ export default {
   width: 100vw;
   display: flex;
   /* height: calc(100vh - 97px); */
-  height: 89vh;
+  height: 85.9vh;
   overflow: hidden;
+  background-color: white;
 }
 
 .category {
   width: 25%;
   background-color: rgb(240, 240, 240);
-}
-
-.chrome_category {
-  width: 25%;
-  background-color: rgb(240, 240, 240);
-  /* height: calc(100vh - 150px); */
-  height: 84vh;
 }
 
 .goods {
@@ -244,5 +232,9 @@ export default {
   display: flex;
   justify-content: center;
   z-index: 1;
+}
+
+.line {
+  border-bottom: 1px solid rgb(229, 229, 229);
 }
 </style>

@@ -1,7 +1,6 @@
 <template>
   <div>
     <item-nav-bar :path="path" :text="text" :close="close" />
-
     <div v-show="hasContent">
       <scroll
         class="item-scroll"
@@ -24,16 +23,16 @@
         </div>
       </scroll>
       <back-top class="backTop" @click.native="backTop" v-show="IsBottom" />
-      <item-operation-bar
-        :desc="desc"
-        :isEditing="isEditing"
-        :isAllChoosed="isAllChoosed"
-        :hasChoosed="hasChoosed"
-        @resolve="resolve"
-        @chooseAll="chooseAll"
-        @unChooseAll="unChooseAll"
-      />
     </div>
+    <item-operation-bar
+      v-show="isEditing"
+      :desc="desc"
+      :isAllChoosed="isAllChoosed"
+      :hasChoosed="hasChoosed"
+      @resolve="resolve"
+      @chooseAll="chooseAll"
+      @unChooseAll="unChooseAll"
+    />
     <div v-show="close" class="empty">空空如也</div>
   </div>
 </template>
@@ -54,12 +53,11 @@ export default {
       isEditing: false,
       goodChoosedList: [],
       isAllChoosed: false,
-      chooseGood: false,  
+      chooseGood: false,
       close: false,
     };
   },
   methods: {
-
     //backTop是否显示的依据
     ifBottom(tag = false) {
       this.IsBottom = tag;
@@ -98,8 +96,7 @@ export default {
     },
   },
 
-  activated() {
-
+  mounted() {
     if (this.ItemObj) {
       this.$refs.scroll.openBackTop();
       this.$refs.scroll.openPullUp();
@@ -111,7 +108,6 @@ export default {
     });
 
     this.close = this.num == 0;
-
   },
   computed: {
     calcHight() {
@@ -147,7 +143,6 @@ export default {
       this.close = newV == 0;
     },
   },
-
 };
 </script>
 <style scoped>
@@ -162,14 +157,10 @@ export default {
 }
 
 .editing {
-  /* height: calc(100vh - 97px); */
-  height: 89vh;  
-
+  height: 85.9vh;
 }
 .noEditing {
-  /* height: calc(100vh - 44px); */
-  height: 95vh; 
-
+  height: 94.3vh;
 }
 
 .empty {
@@ -180,4 +171,6 @@ export default {
   color: gray;
   font-size: 1.2rem;
 }
+
+
 </style>

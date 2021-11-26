@@ -1,12 +1,8 @@
 <template>
   <div class="detail_params_main">
-    <p>{{ goodParams.rule.disclaimer }}</p>
+    <p>{{ disclaimer }}</p>
     <div class="sizes">
-      <div
-        class="size"
-        v-for="(items, index) in goodParams.rule.tables[0]"
-        :key="index"
-      >
+      <div class="size" v-for="(items, index) in size" :key="index">
         <span v-for="(item, index) in items" :key="index">{{ item }}</span>
       </div>
     </div>
@@ -32,10 +28,17 @@ export default {
         return {};
       },
     },
-
+  },
+  computed: {
+    disclaimer() {
+      return this.goodParams.rule?.disclaimer;
+    },
+    size() {
+      return this.goodParams.rule?.tables[0];
+    },
   },
   mounted() {
-    this.$emit('detailGoodResourceLoad');
+    this.$emit("detailGoodResourceLoad");
   },
 };
 </script>
@@ -68,22 +71,21 @@ p {
   color: brown;
 }
 .sizes {
+  margin: 0 10px;
   border: 1px solid saddlebrown;
   border-right: none;
   border-left: none;
-  text-align: center;
 }
 
 .size {
   width: 90%;
   margin: 0 auto;
+  padding: 5px;
   display: flex;
-  padding:5px;
+  justify-content: space-between;
 }
 
-.size span {
-  width: 25%;
-}
+
 
 .size > span:not(:nth-child(1)) {
   color: brown;

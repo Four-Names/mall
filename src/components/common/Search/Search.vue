@@ -1,8 +1,15 @@
 <template>
   <div class="serach_main">
-    <label for="search" class="mid">
-      <input name="search" type="text" class="search" :placeholder="message" @click="$toast.todo"/>
-    </label>
+    <div class="mid">
+      <img src="~img/search/search.svg" alt="" />
+      <input
+        name="search"
+        type="text"
+        class="search"
+        :placeholder="message"
+        @click="$toast.todo"
+      />
+    </div>
   </div>
 </template>
 
@@ -27,19 +34,21 @@ export default {
 }
 
 .search {
-  height: 3.5vh;
-  border-radius: 18px;
-  background-color: rgb(245, 245, 245);
+  height: 5vh;
   border: none;
   outline: none;
   font-size: 2vh;
-  text-align: center;
+  text-align: left;
+  background-color: rgb(245, 245, 245);
+  width: calc(100% - 40px);
 }
 .mid {
-  width: 90%;
-  height: 4.5vh;
+  width: 100%;
+  height: 6vh;
   display: flex;
-  justify-content: center;
+  justify-content: left;
   align-items: center;
+  border-radius: 18px;
+  background-color: rgb(245, 245, 245);
 }
 </style>

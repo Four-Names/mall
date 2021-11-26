@@ -86,8 +86,8 @@ export default {
       this.$router.push({ path: "/detail", query: { id: this.goodId } });
     },
     addGood(goodObj) {
-      this.addShop(goodObj)
-      this.$toast.show("加入购物车成功");
+      this.addShop(goodObj);
+      this.$message.success("加入购物车成功");
     },
   },
   watch: {

@@ -22,7 +22,7 @@
       <div class="right">
         <div class="good-state">
           <a @click="checkGood">
-            <img :src="goodInfo.cover" alt="" />
+            <img :src="goodInfo.cover" :alt="this.title" />
           </a>
           <div class="good-info">
             <span>{{ showTitle }}</span>
@@ -49,17 +49,25 @@
     </div>
 
     <div class="good-operation" v-show="!isEditing">
-      <span v-show="goodIfCollected(goodId)" @click="$emit('Uncollect', goodId)"
-        >取消关注</span
-      >
-      <span v-show="!goodIfCollected(goodId)" @click="$emit('Collect', goodId)">加入关注</span
-      ><span>|</span><span @click="goodDelete({ shopId, goodId })">删除</span>
+      <div v-if="isLogin">
+        <span
+          v-show="goodIfCollected(goodId)"
+          @click="$emit('Uncollect', goodId)"
+          >取消收藏</span
+        >
+        <span
+          v-show="!goodIfCollected(goodId)"
+          @click="$emit('Collect', goodId)"
+          >加入收藏</span
+        ><span>|</span>
+      </div>
+      <span @click="del">删除</span>
     </div>
   </div>
 </template>
 
 <script>
-import { mapGetters, mapMutations } from "vuex";
+import { mapGetters, mapMutations, mapState } from "vuex";
 
 export default {
   name: "CartGood",
@@ -81,20 +89,33 @@ export default {
     return {
       title: this.goodInfo.title,
       goodId: this.goodInfo.goodId,
-      isEditing:false
+      isEditing: false,
     };
   },
   activated() {
     this.$bus.$on("editing", (isEditing) => {
-        this.isEditing = isEditing
+      this.isEditing = isEditing;
 
       if (isEditing) {
         this.$bus.$on("executeDelete", () => {
-          if (this.goodIsActive)
-            this.goodDelete({ shopId: this.shopId, goodId: this.goodId });
+          if (this.goodIsActive) {
+            this.$confirm("确认删除?", "提示", {
+              confirmButtonText: "确定",
+              cancelButtonText: "取消",
+              type: "info",
+            })
+              .then(() => {
+                this.goodDelete({ shopId: this.shopId, goodId: this.goodId });
+                this.$message.success("删除成功");
+              })
+              .catch((e) => {
+                this.$message("已取消删除");
+              });
+          }
         });
         this.$bus.$on("executeCollect", () => {
           if (this.goodIsActive) this.$emit("Collect", this.goodId);
+          this.$message.success("关注成功");
         });
       }
     });
@@ -103,7 +124,9 @@ export default {
   computed: {
     //格式化标题
     showTitle() {
-      return this.title.length < 30 ? this.title :this.title.slice(0, 30) + "...";
+      return this.title.length < 30
+        ? this.title
+        : this.title.slice(0, 30) + "...";
     },
     //价格整数位
     intBit() {
@@ -122,13 +145,14 @@ export default {
 
     //getters映射
     ...mapGetters(["ifGoodActive", "goodIfCollected"]),
+    ...mapState(["isLogin"]),
 
     goodIsActive() {
       return this.ifGoodActive({ goodId: this.goodId, shopId: this.shopId });
     },
   },
   methods: {
-    //关注操作
+    //收藏操作
     foucsOn() {},
 
     //mutations映射
@@ -138,13 +162,28 @@ export default {
       "goodMore", // 商品数量加一
       "chooseGood", //选择商品
       "noChooseGood", //取消选择商品
+      "goodCollected", //收藏商品
+      "goodUnCollect", //取消收藏商品
     ]),
 
     checkGood() {
       this.$router.push({ path: "/detail", query: { id: this.goodId } });
     },
+    del() {
+      this.$confirm("确认删除?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "info",
+      })
+        .then(() => {
+          this.goodDelete({ shopId: this.shopId, goodId: this.goodId });
+          this.$message.success("删除成功");
+        })
+        .catch((e) => {
+          this.$message("已取消删除");
+        });
+    },
   },
-
 };
 </script>
 <style scoped>
@@ -247,8 +286,6 @@ export default {
   height: 30;
   margin-right: 20px;
 }
-
-
 
 .forbid {
   color: grey;

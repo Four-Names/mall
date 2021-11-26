@@ -29,26 +29,25 @@
 
       <tab-bar-item path="/cart">
         <div class="cart" slot="item-icon">
-          <img src="~img/tabbar/cart.svg" alt="购物车" />
-          <div class="num">
-            {{ goodsNumInCart }}
-          </div>
+           <el-badge :value="goodsNum" :max="99" class="item">
+            <img src="~img/tabbar/cart_active.svg" alt="购物车" />
+          </el-badge>
         </div>
+
         <div class="cart" slot="item-icon-active">
-          <img src="~img/tabbar/cart_active.svg" alt="购物车" />
-          <div class="num">
-            {{ goodsNumInCart }}
-          </div>
+          <el-badge :value="goodsNum" :max="99" class="item">
+            <img src="~img/tabbar/cart_active.svg" alt="购物车" />
+          </el-badge>
         </div>
 
         <div slot="item-text">购物车</div>
       </tab-bar-item>
 
-      <tab-bar-item path="/mine">
-        <img slot="item-icon" src="~img/tabbar/mine.svg" alt="我的" />
+      <tab-bar-item path="/my">
+        <img slot="item-icon" src="~img/tabbar/my.svg" alt="我的" />
         <img
           slot="item-icon-active"
-          src="~img/tabbar/mine_active.svg"
+          src="~img/tabbar/my_active.svg"
           alt="我的"
         />
 
@@ -61,7 +60,7 @@
 <script>
 import TabBar from "components/common/TabBar/TabBar";
 import TabBarItem from "components/common/TabBar/TabBarItem";
-import { mapGetters } from "vuex";
+import { mapState } from "vuex";
 export default {
   name: "MainTabBar",
   components: {
@@ -70,17 +69,17 @@ export default {
   },
   data() {
     return {
-      main: true,
-      pathList: ["/collect", "/history"],
+      pathList: ["My", "Home", "Cart", "Category"],
+      main: false,
     };
   },
   watch: {
-    "$route.path"(newV) {
-      this.main = this.pathList.indexOf(newV) == -1;
+    "$route.name"(newV) {
+      this.main = this.pathList.includes(newV);
     },
   },
   computed: {
-    ...mapGetters(["goodsNumInCart"]),
+    ...mapState(["goodsNum"]),
   },
 };
 </script>
@@ -92,22 +91,6 @@ export default {
 .cart {
   position: relative;
   height: 3.5vh;
-}
-.num {
-  position: absolute;
-  right: -3px;
-  top: 0;
-  color: white;
-  display: flex;
-  background-color: rgb(230, 0, 0);
-  width: 2vh;
-  height: 2vh;
-  font-weight: 500;
-  border-radius: 50%;
-  justify-content: center;
-  align-items: center;
-  font-size: 1.5vh;
-  padding: 5%;
 }
 
 img {

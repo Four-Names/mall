@@ -60,10 +60,6 @@ export default {
         return state.shopNum == 0
     },
 
-    //获取购物车内商品数量
-    goodsNumInCart(state) {
-        return state.goodsNum
-    },
 
     //获取商品数量是否达到上限
     goodsIfFull(state) {
@@ -82,15 +78,64 @@ export default {
         return false
     },
 
-    //获取收藏列表
-    getCollectionList(state) {
-        return state.collectionList
-    },
 
     //获取已收藏商品数量
     getCollectionNum(state) {
         return Object.keys(state.collectionList).length
-    }
+    },
 
+    //获取已浏览商品数
+    getViewedNum(state) {
+        return Object.keys(state.viewedList).length
+    },
+
+    //该商品是否已在浏览记录中
+    goodIfViewed: (state) => (goodId) => {
+        return Object.keys(state.viewedList).includes(goodId)
+    },
+
+    //店铺是否已有商品被选中
+    goodSelected: (state) => (shopId) => {
+        for (let good in state.shopList[shopId]['goods']) {
+            if (state.shopList[shopId]['goods'][good].active)
+                return true;
+        }
+        return false;
+    },
+
+    //获取已选商品信息
+    getSelectedGood(state, getters) {
+        let confirmList = {};
+        for (let shopId in state.shopList) {
+            if (getters.goodSelected(shopId)) {
+                let shop = state.shopList[shopId];
+                confirmList[shopId] = {info:shop.shop};
+                confirmList[shopId]['goods'] = {};
+                for (let goodId in shop.goods) {
+                    if (getters.ifGoodActive({
+                            shopId,
+                            goodId
+                    })) {
+                        
+                        let {
+                            price,
+                            title,
+                            count,
+                            cover,
+                        } = shop.goods[goodId];
+
+                        confirmList[shopId]['goods'][goodId] = {
+                            goodId,
+                            price,
+                            title,
+                            count,
+                            cover,
+                        }
+                    }
+                }
+            } 
+        }
+        return confirmList;
+    }
 
 }

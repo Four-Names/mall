@@ -1,7 +1,7 @@
    //防抖函數
-   export function debounce(fun, delay = 150) {
+   function debounce(fun, delay = 350) {
        let timer = null;
-       
+
        return function (...args) {
 
            timer && clearTimeout(timer);
@@ -11,4 +11,10 @@
            }, delay);
 
        };
+   }
+
+   
+
+   module.exports = {
+       debounce,
    }
