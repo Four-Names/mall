@@ -1,11 +1,11 @@
 <template>
-  <nav-bar>
+  <nav-bar class="sticky">
     <div slot="left" class="btn">
       <img src="~assets/img/common/left-arrow.svg" alt="" @click="back" />
     </div>
-    <div slot="center" class="center">{{ text }}</div>
-    <div slot="right" class="btn" @click="edit">
-      <div v-show="!close" class="text">
+    <div slot="center" >{{ text }}</div>
+    <div slot="right" class="btn">
+      <div v-if="!close" class="text" @click="edit">
         <div v-show="!editing">编辑</div>
         <div v-show="editing">完成</div>
       </div>
@@ -44,13 +44,12 @@ export default {
   },
   methods: {
     back() {
-      if (this.path) this.$router.replace(this.path);
+      if (this.path) this.$router.push(this.path);
       else this.$router.go(-1);
     },
     edit() {
       this.editing = !this.editing;
-      console.log('emit',this.editing);
-      this.$bus.$emit("editing", this.editing);
+      this.$emit("editing", this.editing);
     },
   },
   deactivated() {
@@ -68,5 +67,10 @@ export default {
 }
 .text {
   font-size: 2vh;
+}
+
+.sticky{
+  top: 0;
+  /* position: fixed; */
 }
 </style>

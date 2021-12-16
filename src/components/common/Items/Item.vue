@@ -22,7 +22,7 @@
     <div class="right">
       <div class="title">{{ showTitle }}</div>
       <div class="bottom">
-        <div class="price">￥{{ goodObj.good.price }}</div>
+        <div class="price">¥{{ goodObj.good.price }}</div>
         <div v-show="!isEditing" class="cart" @click="addGood(goodObj)">
           <img v-show="goodInCart" src="~img/item/CartActive.svg" alt="" />
           <img v-show="!goodInCart" src="~img/item/addCart.svg" alt="" />

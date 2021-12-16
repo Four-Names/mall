@@ -4,6 +4,7 @@ import 'element-ui/lib/theme-chalk/index.css'
 
 
 Vue.use(Element)
+let timer = null;
 
 Vue.prototype.$message = function (msg) {
     Element.Message({
@@ -27,6 +28,7 @@ Vue.prototype.$message.success = function (msg) {
 
 
 Vue.prototype.$message.warning = function (msg) {
+
     Element.Message.warning({
         message: msg,
         duration: 1000,
@@ -35,6 +37,8 @@ Vue.prototype.$message.warning = function (msg) {
         showClose: true,
     })
 }
+
+
 
 
 Vue.prototype.$message.error = function (msg) {
@@ -54,11 +58,13 @@ Vue.prototype.$confirm = function (...msg) {
         cancelButtonText,
         confirmButtonText,
         type,
-    } = msg[2]
-    return Element.MessageBox.confirm(msg[0], msg[1],{
+        closeOnClickModal
+    } = msg[2];
+    return Element.MessageBox.confirm(msg[0], msg[1], {
         cancelButtonText,
         confirmButtonText,
         type,
         center: true,
+        closeOnClickModal
     })
 }

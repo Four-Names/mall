@@ -37,6 +37,15 @@ import { required, minLength, maxLength } from "vuelidate/lib/validators";
 import { loginIn, setUserInfo } from "common/localStorage";
 import { mapGetters, mapMutations, mapState } from "vuex";
 
+import {
+  updateCart,
+  getUserCart,
+  getUserCollection,
+  getUserViewed,
+} from "network/user";
+
+import { Login } from "network/login";
+
 export default {
   components: { ItemNavBar },
   data() {
@@ -62,40 +71,30 @@ export default {
       "syncCart",
       "syncCollection",
       "syncViewed",
+      "setUserInfo",
     ]),
     login() {
-      let data = {
-        username: this.username,
-        password: this.password,
-      };
-      this.$axios
-        .post(`/login`, JSON.stringify(data))
-        .then(async (res) => {
+      Login({ username: this.username, password: this.password }).then(
+        async (res) => {
           if (res.data?.tag) {
-            if (!this.cartIsEmpty) {
-              await this.updateCart();
-            }
-
-            this.getUserCart();
-            this.getUserCollection();
-            this.getUserViewed();
-
             let token = res.data.data.token;
             loginIn(token);
 
             this.setLogin(true);
 
-            setUserInfo({ nickname: res.data.data.nickname });
+            this.getUserCart();
+            this.getUserCollection();
+            this.getUserViewed();
 
+            setUserInfo({ nickname: res.data.data.nickname });
+            this.setUserInfo({ nickname: res.data.data.nickname });
             this.$message.success("登录成功");
             this.$router.push({ path: "/my" });
           } else {
             this.$message.error("用户名或密码错误");
           }
-        })
-        .catch((e) => {
-          throw e;
-        });
+        }
+      );
     },
     status(validation) {
       return {
@@ -105,45 +104,44 @@ export default {
     },
 
     //同步未登录前的购物车数据
-    updateCart() {
-      let data = {
-        data: JSON.stringify(this.shopList),
-      };
-      this.$axios
-        .post("/user/update_cart", JSON.stringify(data))
-        .then((res) => {
-          console.log("res", res);
-        });
+    async updateCart() {
+      updateCart({ data: JSON.stringify(this.shopList) }).then();
     },
 
     //获取用户购物车数据
     getUserCart() {
-      this.$axios.get("/user/cart").then((res) => {
-        let shops = JSON.parse(res.data.data);
-        for (let shop in shops) {
-          this.syncCart(shops[shop]);
+      getUserCart().then((res) => {
+        //同步未登录前数据
+        this.updateCart();
+        if (res.data.tag) {
+          let shops = JSON.parse(res.data.data.data);
+          for (let shop in shops) {
+            this.syncCart(shops[shop]);
+          }
         }
       });
     },
 
     //获取用户收藏数据
     getUserCollection() {
-      this.$axios.get("/user/collection").then((res) => {
-        console.log(res, "collection");
-        let collections = JSON.parse(res.data.data.data);
-        for (let collection in collections) {
-          this.syncCollection(collections[collection]);
+      getUserCollection().then((res) => {
+        if (res.data.tag) {
+          let collections = JSON.parse(res.data.data.data);
+          for (let collection in collections) {
+            this.syncCollection(collections[collection]);
+          }
         }
       });
     },
 
     //获取用户浏览记录
     getUserViewed() {
-      this.$axios.get("/user/viewed").then((res) => {
-        console.log(res, "viewed");
-        let viewedGood = JSON.parse(res.data.data.data);
-        for (let good in viewedGood) {
-          this.syncViewed(viewedGood[good]);
+      getUserViewed().then((res) => {
+        if (res.data.tag) {
+          let viewedGood = JSON.parse(res.data.data.data);
+          for (let good in viewedGood) {
+            this.syncViewed(viewedGood[good]);
+          }
         }
       });
     },

@@ -25,6 +25,7 @@ export default {
   background-color: white;
   font-size: 3vh;
   box-sizing: border-box;
+  width: 100vw;
 }
 
 .right ,.left{
@@ -38,6 +39,9 @@ export default {
   width: 26px;
 }
 .center {
+  display: flex;
   flex: 1;
+  justify-content: center;
+  align-items: center;
 }
 </style>

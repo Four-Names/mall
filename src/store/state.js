@@ -8,5 +8,9 @@ export default {
     viewedList:{},
     goodsNum: 0,
     goodsMaxNum: 99,
-    isLogin:false
+    selectedGood:{},
+    isLogin: false,
+    userInfo: {},
+    address: null,
+    buyNowGood:{},
 }

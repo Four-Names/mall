@@ -28,6 +28,10 @@
         <img src="~img/my/complete.svg" alt="" />
         <p>已完成</p>
       </div>
+      <div class="feature" @click="$router.push('/my/order/4')">
+        <img src="~img/my/cancel.svg" alt="" />
+        <p>已取消</p>
+      </div>
       <div class="feature" @click="$router.push('/my/order/0')">
         <img src="~img/my/orders.svg" alt="" />
         <p>全部订单</p>
@@ -38,37 +42,29 @@
 
 <script>
 import { mapGetters } from "vuex";
-import { getUserInfo } from "common/localStorage";
 
 export default {
   name: "MyHeader",
   data() {
-    return {
-      userInfo: {},
-    };
+    return {};
   },
   computed: {
-    ...mapGetters(["getCollectionNum", "getViewedNum"]),
+    ...mapGetters(["getCollectionNum", "getViewedNum", "userInfo"]),
     shop_count() {
       return 0;
     },
   },
   methods: {
-    async goCollect() {
+     goCollect() {
       if (!this.$route.path.includes("/my/collect")) {
-        let collect = await this.$router.push("/my/collect");
-        console.log(collect);
+        this.$router.push("/my/collect");
       }
     },
-    async goViewed() {
+     goViewed() {
       if (!this.$route.path.includes("/my/viewed")) {
-        let viewed = await this.$router.push("/my/viewed");
-        console.log(viewed);
+        this.$router.push("/my/viewed");
       }
     },
-  },
-  activated() {
-    this.userInfo = getUserInfo();
   },
 };
 </script>
@@ -110,7 +106,11 @@ export default {
   font-weight: 600;
 }
 .nickname {
+  margin-top: 10px;
   text-align: center;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 600;
 }
 
 .feature_bar {
@@ -141,5 +141,4 @@ export default {
   height: 30px;
   display: block;
 }
-
 </style>

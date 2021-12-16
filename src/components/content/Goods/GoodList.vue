@@ -1,7 +1,7 @@
 <template>
   <div class="goods">
     <div class="good">
-      <good-list-item v-for="(item, id) in goods" :key="id" :goodsItem="item" :loadName="loadName"/>
+      <good-list-item v-for="(item, id) in goods" :key="id" :goodsItem="item" @loadGood="$emit('loadGood')"/>
     </div>
   </div>
 </template>
@@ -18,12 +18,6 @@ export default {
         return [];
       },
     },
-    loadName: {
-      type: String,
-      default() {
-        return "";
-      },
-    },
   },
   components: { GoodListItem },
 };
@@ -32,9 +26,11 @@ export default {
 
 .good {
   display: flex;
-  flex-wrap: wrap-reverse;
+  flex-wrap: wrap;
   padding-bottom: 57px;
-  justify-content: space-around;
+  justify-content: space-between;
+  width: 98%;
+  margin: 0 auto;
 }
 
 .goods {

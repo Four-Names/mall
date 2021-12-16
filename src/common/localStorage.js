@@ -7,7 +7,8 @@ export {
     getToken,
     setUserInfo,
     getUserData,
-    removeUserData
+    removeUserData,
+    clearUserInfo
 };
 
 
@@ -32,12 +33,12 @@ function updateUserData(target) {
 
 //保存登录状态
 function setUserState(state) {
-    localStorage.setItem('isLogin', state)
+    localStorage.setItem('isLogin', JSON.stringify(state))
 }
 
 //获取登录状态
 function getUserState() {
-    return localStorage.getItem('isLogin')
+    return JSON.parse(localStorage.getItem('isLogin'));
 }
 
 
@@ -60,6 +61,11 @@ function setUserInfo(info) {
 
 function getUserInfo() {
     return JSON.parse(localStorage.getItem('user'));
+}
+
+//清除用户信息
+function clearUserInfo() {
+    localStorage.removeItem('user')
 }
 
 //删除数据

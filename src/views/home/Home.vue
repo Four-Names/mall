@@ -7,7 +7,7 @@
         alt=""
         @click="$router.push('/category')"
       />
-      <search slot="center" :message="''" />
+      <search slot="center" />
       <img
         slot="right"
         src="~img/home/my.svg"
@@ -15,7 +15,7 @@
         @click="$router.push('/my')"
       />
     </nav-bar>
-    <div v-show="loadDone" class="scroll">
+    <div class="scroll">
       <tab-control
         :titles="titles"
         @tabClick="tabClick"
@@ -31,11 +31,11 @@
         :backTimer="450"
         ref="scroll"
       >
-        <home-swiper :banners="banners" @loadDone="loadDone++" />
+        <home-swiper :banners="banners" />
 
-        <home-recommond :recommends="recommends" @loadDone="loadDone++" />
+        <home-recommond :recommends="recommends" />
 
-        <feature-view @loadDone="loadDone++" />
+        <feature-view />
 
         <tab-control
           :titles="titles"
@@ -44,7 +44,7 @@
           v-show="!ceiling"
         />
 
-        <good-list :goods="CurrentGoods" :loadName="loadName" />
+        <good-list :goods="CurrentGoods" @loadGood="refreSher" />
       </scroll>
     </div>
 
@@ -66,6 +66,8 @@ import BackTop from "components/content/BackTop/BackTop";
 
 import { debounce } from "common/utils";
 
+import { getHomeData, getHomeGoods } from "network/home";
+
 export default {
   name: "Home",
   data() {
@@ -81,10 +83,7 @@ export default {
       IsBottom: false,
       ceiling: false,
       ceilingPot: 0,
-      posY: 0,
-      refreSher: null,
-      loadName: "homeGoodLoad",
-      loadDone: 0,
+      refreSher: {},
       types: ["pop", "new", "sell"],
       titles: ["流行", "新款", "精选"],
     };
@@ -101,13 +100,28 @@ export default {
     Search,
   },
   created() {
-    this.getHomeData();
+    //获取tabbar、swiper、featrueview数据
+    getHomeData().then((res) => {
+      this.banners = res.data.data.banner;
+      this.recommends = res.data.data.recommend;
+      this.$nextTick(() => {
+        //获取吸顶组件上方的navbar所占的高度以计算固定值
+        const offset = this.$refs.bar.$el.offsetHeight;
+        this.ceilingPot = this.$refs.tab1.$el.offsetTop - offset;
+      });
+    });
 
     //获取商品封面数据
     this.getHomeGood("pop");
     this.getHomeGood("sell");
     this.getHomeGood("new");
-    //闭包函数实现防抖
+  },
+  mounted() {
+    this.refreSher = debounce(() => {
+      this.$nextTick(() => {
+        this.$refs.scroll?.refresh();
+      });
+    });
   },
   methods: {
     //加載更多
@@ -127,31 +141,14 @@ export default {
       this.ceiling = tag;
     },
 
-    //获取tabbar、swiper、featrueview数据
-    getHomeData() {
-      this.$axios
-        .get("/home/data")
-        .then((res) => {
-          this.banners = res.data.data.banner;
-          this.recommends = res.data.data.recommend;
-        })
-        .catch();
-    },
-
     // 获取对应商品封面数据
     getHomeGood(type = this.type) {
       const page = ++this.goods[type].page;
-      this.$axios
-        .get(`/home/good?type=${type}&page=${page}`)
-        .then((res) => {
-          this.goods[type].list.splice(0, 0, ...res.data.data);
-          this.loadDone++;
-        })
-        .catch();
+      getHomeGoods(type, page).then((res) => {
+        this.goods[type].list.push(...res.data.data);
+        this?.refreSher();
+      });
     },
-  },
-  mounted() {
-    this.refreSher = debounce(this.$refs.scroll?.refresh);
   },
   computed: {
     CurrentGoods() {
@@ -162,33 +159,8 @@ export default {
       return this.ceiling ? "wrapper1" : "wrapper";
     },
   },
-  watch: {
-    loadDone(newV) {
-      if (newV == 6) {
-        //打开scrollup与backtop监听
-        this.$refs.scroll.openPullUp();
-        this.$refs.scroll.openBackTop();
-
-        //获取吸顶组件上方的navbar所占的高度以计算固定值
-        const offset = this.$refs.bar.$el.offsetHeight;
-        this.ceilingPot = this.$refs.tab1.$el.offsetTop - offset;
-      }
-    },
-  },
   activated() {
-    console.log(this.posY, "posy");
-    this.$bus.$on(this.loadName, () => {
-      this?.refreSher();
-    });
-    if (this.loadDone == 3) {
-      this.$refs.scroll.scrollTo(0, this.posY, 4);
-    }
-    console.log(this.ClassWrapper, this.ceiling);
-  },
-  deactivated() {
-    this.posY = this.$refs.scroll.getY();
-    console.log(this.posY, "posy");
-    this.$bus.$off(this.loadName);
+    this.ceiling = this.$refs?.scroll.getY() > this.ceilingPot;
   },
 };
 </script>
@@ -197,18 +169,18 @@ export default {
   background-color: white;
 }
 
-.scroll{
+.scroll {
   height: 92.6vh;
 }
 
 .wrapper {
   height: 86.6vh;
-  overflow: hidden;
+  overflow-y: hidden;
 }
 
 .wrapper1 {
   height: 79.9vh;
-  overflow: hidden;
+  overflow-y: hidden;
 }
 
 .background {

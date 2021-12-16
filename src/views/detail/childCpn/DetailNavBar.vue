@@ -73,6 +73,7 @@ export default {
 
 .title {
   display: flex;
+  width: 100%;
 }
 
 .title div {
@@ -83,46 +84,5 @@ export default {
   color: red;
 }
 
-.triangle {
-  top: 5vh;
-  right: 22px;
-  position: absolute;
-  width: 0;
-  height: 0;
-  border: 8px solid transparent;
-  border-bottom: 8px solid rgba(25, 25, 25, 0.9);
-}
 
-.menu {
-  top: calc(5vh + 16px);
-  right: 10px;
-  background-color: rgba(25, 25, 25, 0.9);
-  width: 120px;
-  padding: 10px 0;
-  position: absolute;
-  border-radius: 5px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 10;
-}
-
-.row {
-  display: flex;
-  height: 35px;
-  justify-content: center;
-  align-items: center;
-  padding: 2px 0;
-}
-
-.icon {
-  width: 26px;
-}
-
-.desc {
-  color: white;
-  width: 80px;
-  font-size: 14px;
-}
 </style>

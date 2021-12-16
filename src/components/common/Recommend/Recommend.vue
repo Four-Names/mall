@@ -1,37 +1,27 @@
 <template>
-  <div class="" v-if="goodRecommend">
+  <div class="" v-if="recommendGoods">
     <recommend-bar />
-    <good-list :goods="goodRecommend" :loadName="loadName"> </good-list>
+    <good-list :goods="recommendGoods" @loadGood="$emit('loadGood')">
+    </good-list>
   </div>
 </template>
 
 <script>
 import RecommendBar from "./RecommendBar";
 import GoodList from "components/content/Goods/GoodList";
+import { goodRecommend } from "network/recommend";
+
 export default {
-  props: {
-    loadName: {
-      type: String,
-      default() {
-        return "";
-      },
-    },
-  },
   data() {
     return {
-      goodRecommend:null
-    }
+      recommendGoods: null,
+    };
   },
   created() {
     //获取商品推荐
-    this.$axios
-      .get(`/recommend`)
-      .then((res) => {
-        this.goodRecommend = res.data.data;
-      })
-      .catch(() => {
-        this.$message.warning('获取推荐数据失败，请稍后刷新或检查网络问题');
-      });
+    goodRecommend().then((res) => {
+      this.recommendGoods = res.data.data;
+    });
   },
   components: {
     GoodList,

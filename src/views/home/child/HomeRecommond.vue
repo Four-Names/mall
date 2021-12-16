@@ -1,5 +1,5 @@
 <template>
-  <div class="recommond">
+  <div class="recommond" v-if="recommonds.length">
     <div v-for="(item, id) in recommonds" :key="id" class="recommond-item">
       <a :href="item.link">
         <img :src="item.image" alt="" />

@@ -34,10 +34,10 @@ export default {
     ifGoodActive: (state) => (target) => {
         const {
             shopId,
-            goodId
+            goodId,
         } = target
-        if (state.shopList[shopId])
-            return state.shopList[shopId]['goods'][goodId].active
+
+        return state.shopList[shopId]['goods'][goodId].active
     },
 
     //获取店铺内商品是否已全选
@@ -51,7 +51,6 @@ export default {
 
     //获取商品收藏状态
     goodIfCollected: (state) => (goodId) => {
-
         return state.collectionList.hasOwnProperty(goodId)
     },
 
@@ -70,7 +69,7 @@ export default {
     goodIfInCart: (state) => (target) => {
         const {
             shopId,
-            goodId
+            goodId,
         } = target
         if (state.shopList.hasOwnProperty(shopId)) {
             return state.shopList[shopId]['goods'].hasOwnProperty(goodId)
@@ -109,14 +108,16 @@ export default {
         for (let shopId in state.shopList) {
             if (getters.goodSelected(shopId)) {
                 let shop = state.shopList[shopId];
-                confirmList[shopId] = {info:shop.shop};
+                confirmList[shopId] = {
+                    info: shop.shop
+                };
                 confirmList[shopId]['goods'] = {};
                 for (let goodId in shop.goods) {
                     if (getters.ifGoodActive({
                             shopId,
                             goodId
-                    })) {
-                        
+                        })) {
+
                         let {
                             price,
                             title,
@@ -133,9 +134,27 @@ export default {
                         }
                     }
                 }
-            } 
+            }
         }
         return confirmList;
+    },
+
+    //获取是否已有默认地址
+    hasAddress(state) {
+        return state.address;
+    },
+
+    //获取商品数量
+    goodCount: (state) => ({
+        shopId,
+        goodId
+    }) => {
+        return state.shopList[shopId].goods[goodId].count;
+    },
+
+    //获取用户信息
+    userInfo(state) {
+        return state.userInfo;
     }
 
 }

@@ -9,7 +9,7 @@
 export default {
   methods: {
     login() {
-        this.$router.push({path:'/login'});
+        this.$router.push('/login');
     },
   },
 };

@@ -93,7 +93,6 @@ export default {
     ...mapMutations(["goodCollected", "goodUnCollect"]),
     Collect() {
       if (this.isLogin) {
-        console.log(this.goodObj, "collect");
         this.goodCollected({ ...this.goodObj });
 
         this.$message.success("收藏成功");
@@ -103,7 +102,6 @@ export default {
     },
 
     Uncollect() {
-      console.log(this.goodObj, "uncollect");
         this.$message.success("取消收藏");
       this.goodUnCollect(this.goodId);
     },

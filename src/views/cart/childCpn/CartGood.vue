@@ -28,7 +28,7 @@
             <span>{{ showTitle }}</span>
             <div class="check">
               <div class="price">
-                <span class="flotBit">￥</span
+                <span class="flotBit">¥</span
                 ><span class="intBit"> {{ intBit }}</span
                 ><span class="flotBit">{{ flotBit }}</span>
               </div>
@@ -39,7 +39,7 @@
                   :class="ifCheck"
                   >-</span
                 >
-                <div class="count">{{ goodInfo.count }}</div>
+                <div class="count">{{ goodCount({ shopId, goodId }) }}</div>
                 <span class="btn" @click="goodMore({ shopId, goodId })">+</span>
               </div>
             </div>
@@ -50,15 +50,10 @@
 
     <div class="good-operation" v-show="!isEditing">
       <div v-if="isLogin">
-        <span
-          v-show="goodIfCollected(goodId)"
-          @click="$emit('Uncollect', goodId)"
+        <span v-show="goodIfCollected(goodId)" @click="Uncollect"
           >取消收藏</span
         >
-        <span
-          v-show="!goodIfCollected(goodId)"
-          @click="$emit('Collect', goodId)"
-          >加入收藏</span
+        <span v-show="!goodIfCollected(goodId)" @click="Collect">加入收藏</span
         ><span>|</span>
       </div>
       <span @click="del">删除</span>
@@ -78,6 +73,12 @@ export default {
         return {};
       },
     },
+    shop: {
+      type: Object,
+      default() {
+        return {};
+      },
+    },
     shopId: {
       type: String,
       default() {
@@ -91,34 +92,6 @@ export default {
       goodId: this.goodInfo.goodId,
       isEditing: false,
     };
-  },
-  activated() {
-    this.$bus.$on("editing", (isEditing) => {
-      this.isEditing = isEditing;
-
-      if (isEditing) {
-        this.$bus.$on("executeDelete", () => {
-          if (this.goodIsActive) {
-            this.$confirm("确认删除?", "提示", {
-              confirmButtonText: "确定",
-              cancelButtonText: "取消",
-              type: "info",
-            })
-              .then(() => {
-                this.goodDelete({ shopId: this.shopId, goodId: this.goodId });
-                this.$message.success("删除成功");
-              })
-              .catch((e) => {
-                this.$message("已取消删除");
-              });
-          }
-        });
-        this.$bus.$on("executeCollect", () => {
-          if (this.goodIsActive) this.$emit("Collect", this.goodId);
-          this.$message.success("关注成功");
-        });
-      }
-    });
   },
 
   computed: {
@@ -144,7 +117,7 @@ export default {
     },
 
     //getters映射
-    ...mapGetters(["ifGoodActive", "goodIfCollected"]),
+    ...mapGetters(["ifGoodActive", "goodIfCollected", "goodCount"]),
     ...mapState(["isLogin"]),
 
     goodIsActive() {
@@ -174,14 +147,25 @@ export default {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         type: "info",
-      })
-        .then(() => {
-          this.goodDelete({ shopId: this.shopId, goodId: this.goodId });
-          this.$message.success("删除成功");
-        })
-        .catch((e) => {
-          this.$message("已取消删除");
-        });
+      }).then(() => {
+        this.goodDelete({ shopId: this.shopId, goodId: this.goodId });
+        this.$message.success("删除成功");
+      });
+    },
+    Collect() {
+      let info = {
+        good: this.goodInfo,
+        goodId: this.goodId,
+        shop: this.shop,
+        shopId: this.shopId,
+      };
+      this.goodCollected(info);
+      this.$message.success("收藏成功");
+    },
+
+    Uncollect() {
+      this.goodUnCollect(this.goodId);
+      this.$message.success("取消收藏");
     },
   },
 };

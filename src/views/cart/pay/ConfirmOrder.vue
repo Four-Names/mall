@@ -1,6 +1,5 @@
 <template>
   <div class="main">
-    <router-view />
     <nav-bar class="line">
       <img
         slot="left"
@@ -10,12 +9,12 @@
       />
       <div slot="center">确认订单</div>
     </nav-bar>
-    <div  @click="selectAddress">
-      <div class="address" v-if="currentAddress">
+    <div @click="$router.push('/my/address?pay=1')">
+      <div class="address" v-if="address">
         <div>
           <div>
-            <div>{{ currentAddress.receiver }}</div>
-            <div>{{ currentAddress.phone }}</div>
+            <div>{{ address.receiver }}</div>
+            <div>{{ address.phone }}</div>
           </div>
           <div>
             {{ fullAddress }}
@@ -26,99 +25,130 @@
         </div>
       </div>
     </div>
-    <div>
-      <div
-        v-for="(shop, index) in getSelectedGood"
-        :key="index"
-        class="shopGoods"
-      >
-        <div class="shopBanner">
-          <img :src="shop.info.shopLogo" alt="" />
-          <div class="shopName">
-            {{ shop.info.shopName }}
-          </div>
-        </div>
-        <div>
-          <div v-for="(good, index) in shop.goods" :key="index" class="good">
-            <img :src="good.cover" :alt="good.title" />
-            <div class="info">
-              <div>{{ formateTitle(good.title) }}</div>
-              <div>
-                <div class="price"><span>￥</span>{{ good.price }}</div>
-                <div class="count">x{{ good.count }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="goods">
+      <order-good :goods="goods" />
     </div>
+
+    <div class="payLine" @click="pay">
+      <div slot="reference">在线支付</div>
+    </div>
+    <pay-order
+      v-if="paying"
+      :price="price"
+      :count="count"
+      :goods="goods"
+      :address_i="address_i"
+      @close="paying = false"
+    />
   </div>
 </template>
 
+
 <script>
 import NavBar from "components/common/NavBar/NavBar";
-import { mapGetters } from "vuex";
+import OrderGood from "components/common/Order/OrderGood";
+import payOrder from "./payOrder";
+
+import { mapGetters, mapState, mapMutations } from "vuex";
+
+import { getAddress } from "network/user";
 
 export default {
   components: {
     NavBar,
+    payOrder,
+    OrderGood,
   },
   data() {
     return {
-      address: null,
+      buyNow: null,
+      paying: false,
       currentAddress: null,
     };
   },
   computed: {
-    ...mapGetters(["getSelectedGood"]),
+    ...mapGetters(["getSelectedGood", "reCount"]),
+    ...mapState(["totalPrice", "address", "buyNowGood", "hasAddress"]),
     fullAddress() {
-      return (
-        this.currentAddress.province +
-        this.currentAddress.city +
-        this.currentAddress.address
-      );
+      return this.address.province + this.address.city + this.address.address;
+    },
+
+    good() {
+      if (this.goods) {
+        return Object.values(Object.values(this.goods)[0].goods)[0];
+      } else {
+        return {};
+      }
+    },
+
+    price() {
+      return this.buyNow
+        ? (this.good.price * this.count).toFixed(2)
+        : this.totalPrice.toFixed(2);
+    },
+    count() {
+      return this.buyNow ? this.good.count : this.reCount;
+    },
+    goods() {
+      if (this.$route.params.type == 0) {
+        if (this.getSelectedGood == {}) {
+          this.$message.error("获取用户订单信息失败");
+          this.$router.push("/");
+        } else {
+          return this.getSelectedGood;
+        }
+      }
+      if (this.$route.params.type == 1) {
+        return this.buyNowGood;
+      }
+    },
+    address_i() {
+      return this.address.i;
     },
   },
-  watch: {},
   methods: {
+    ...mapMutations([, "setAddress"]),
+
     formateTitle(title) {
       return title.slice(0, 20) + "...";
     },
 
-    async selectAddress() {
-      this.$router.push("/my/address?pay=1");
-      await new Promise((resolve, reject) => {
-        this.$bus.$on("getAddress", (address) => {
-          this.currentAddress = address;
-          resolve()
-        });
-      }).then(() => {
-        this.$bus.$off("getAddress");
-      });
+    pay() {
+      this.paying = true;
     },
   },
   created() {
-    this.$axios.get("/user/address").then((res) => {
-      this.currentAddress = res.data.data[0];
-    });
+    this.buyNow = this.$route.params.type == 1;
+    if (this.$route.params.type != 0 && this.$route.params.type != 1) {
+      this.$router.push("/");
+    }
+    if (!this.hasAddress) {
+      getAddress().then((res) => {
+        if (res.data.tag) {
+          this.currentAddress = res.data.data[0];
+          this.setAddress(res.data.data[0]);
+        } else {
+          this.$router.push("/my/address?pay=2");
+        }
+      });
+    }
   },
+  activated() {
+    if (!Object.keys(this.address).length) {
+      this.$router.push("/my/address?pay=2");
+    }
+  },
+
 };
 </script>
 <style scoped>
 .main {
-  height: 100vh;
   width: 100vw;
   background-color: rgb(242, 242, 242);
 }
 
 .line {
   border-bottom: 1px solid rgb(242, 242, 242);
-}
-
-.shopGoods {
-  background-color: white;
-  border-radius: 10px;
-  margin: 10px 0;
 }
 
 .address {
@@ -145,68 +175,31 @@ export default {
   font-weight: 600;
 }
 
-.shopBanner {
+.payLine {
   display: flex;
-  flex-direction: row;
-  width: 95vw;
-  margin: 0 auto;
-  box-sizing: border-box;
-  height: 60px;
-  gap: 10px;
+  justify-content: center;
   align-items: center;
+  height: 70px;
+  width: 100vw;
+  padding: 0 10vw;
+  background-color: white;
+  box-sizing: border-box;
+  position: fixed;
+  bottom: 0;
+  margin-top: 70px;
 }
-.shopBanner img {
-  width: 45px;
+
+.payLine > div {
+  width: 80vw;
   height: 45px;
-  border-radius: 50%;
+  line-height: 45px;
+  background-color: rgb(55, 131, 253);
+  text-align: center;
+  border-radius: 20px;
+  color: white;
 }
 
-.shopName {
-  font-weight: 550;
-}
-
-.good {
-  display: flex;
-  flex-direction: row;
-  width: 95vw;
-  margin: 0 auto;
-  padding: 10px 0;
-}
-.good img {
-  width: 80px;
-  height: 80px;
-  border-radius: 5px;
-}
-
-.info {
-  width: calc(95vw - 100px);
-  margin-left: 10px;
-  height: 80px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.info > div:first-child {
-  font-size: 17px;
-}
-
-.info > div:nth-child(2) {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-}
-
-.price {
-  color: red;
-  font-size: 18px;
-}
-
-.price > span {
-  font-size: 13px;
-}
-
-.count {
-  color: rgb(152, 152, 152);
+.goods {
+  padding-bottom: 70px;
 }
 </style>

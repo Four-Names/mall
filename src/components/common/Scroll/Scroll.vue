@@ -24,72 +24,46 @@ export default {
         return 300;
       },
     },
-    extra: {
-      type: String,
-      default() {
-        return null;
-      },
-    },
-    scrollBar: {
-      type: Boolean,
-      default() {
-        return true;
-      },
-    },
   },
   data() {
     return {
       scroll: null,
+      bottom: false,
+      scrollConfig: {
+        probeType: 3,
+        pullUpLoad: true,
+        click: true,
+        preventDefault: true,
+        stopPropagation: true,
+        scrollY: true,
+        bounce: false,
+        mouseWheel: {
+          speed: 2,
+          invert: false,
+          easeTime: 300,
+        },
+      },
     };
   },
   mounted() {
     this.scroll = new BScroll(this.$refs.wrapper, this.scrollConfig);
-  },
-  computed: {
-    scrollConfig() {
-      return this.scrollBar
-        ? {
-            probeType: 3,
-            pullUpLoad: true,
-            click: true,
-            preventDefault: true,
-            stopPropagation: true,
-            scrollY: true,
-            scrollbar: {
-              fade: true,
-              minSize: 1,
-            },
-            bounce: false,
-            mouseWheel: {
-              speed: 2,
-              invert: false,
-              easeTime: 300,
-            },
-          }
-        : {
-            probeType: 3,
-            pullUpLoad: true,
-            click: true,
-            preventDefault: true,
-            stopPropagation: true,
-            scrollY: true,
-            bounce: false,
-            mouseWheel: {
-              speed: 2,
-              invert: false,
-              easeTime: 300,
-            },
-          };
-    },
+    this.openBackTop();
+    this.openPullUp();
   },
 
   methods: {
     //回到顶部
     BackTop() {
-      this.scrollTo(0, 0, this.backTimer);
+      this.scrollTo(0);
     },
+    //准备好下一次的 pullingUp 钩子
+    finishPullUp() {
+      this.scroll.finishPullUp();
+    },
+
     pullUp() {
       this.$emit("loadMore");
+      this.finishPullUp();
       //重置scroll监听
     },
     //打开pullup监听
@@ -99,42 +73,48 @@ export default {
 
     //关闭pullup监听
     closePullUp() {
-      this.scroll.finishPullUp();
       this.scroll.off("pullingUp", this.pullUp);
     },
 
     event(pos) {
-      this.$emit("ifBottom", -pos.y > this.topPot);
-      if (this.extra) this.$emit(this.extra, -pos.y);
+      this.bottom = -pos.y > this.topPot;
     },
+
     //打开backtop监听
     openBackTop() {
       this.scroll.on("scroll", this.event);
     },
+
     //关闭backtop监听
     closeBackTop() {
       this.scroll.off("scroll", this.event);
     },
 
-    scrollTo(x, y, time) {
-      this.scroll.scrollTo(x, y, time);
-    },
-
-    getY() {
-      return this.scroll.y;
+    scrollTo(y, time = this.backTimer) {
+      this.scroll.scrollTo(0, y, time);
     },
 
     refresh() {
       this.scroll.refresh();
     },
+
+    getY() {
+      return -this.scroll.y;
+    },
   },
-  activated() {
-    this.openBackTop();
-    this.openPullUp();
+  watch: {
+    bottom(newV) {
+      this.$emit("ifBottom", newV);
+    },
   },
   deactivated() {
     this.closeBackTop();
     this.closePullUp();
+  },
+  activated() {
+    this.openBackTop();
+    this.openPullUp();
+    this.refresh();
   },
 };
 </script>

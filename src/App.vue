@@ -12,6 +12,10 @@ import MainTabBar from "./components/content/Tab/MainTabBar";
 import { mapMutations, mapGetters, mapState } from "vuex";
 import { debounce } from "common/utils";
 
+import { syncCart, updateCollection, updateViewed } from "network/user";
+
+import BaseConfig from "network/base";
+
 export default {
   name: "app",
   components: {
@@ -22,9 +26,11 @@ export default {
       loadingCount: 0,
       isLoading: false,
       setLoading: null,
-      updateCart: null,
+      syncCart: null,
       updateCollection: null,
       updateViewed: null,
+      timer: null,
+      warning: null,
     };
   },
   computed: {
@@ -32,7 +38,7 @@ export default {
   },
   mounted() {
     //请求拦截器
-    this.$axios.interceptors.request.use(
+    BaseConfig.interceptors.request.use(
       (config) => {
         this.addLoading();
         if (localStorage.token) {
@@ -41,21 +47,21 @@ export default {
         return config;
       },
       (error) => {
+        this.warning();
         this.closeLoading();
-        this.$message.warning('网络异常，请稍后再试');
         return Promise.reject(error);
       }
     );
 
     // 响应拦截器
-    this.$axios.interceptors.response.use(
+    BaseConfig.interceptors.response.use(
       (response) => {
         this.closeLoading();
         return response;
       },
       (error) => {
+        this.warning();
         this.closeLoading();
-        this.$message.warning('网络异常，请稍后再试');
         return Promise.reject(error);
       }
     );
@@ -80,27 +86,24 @@ export default {
   },
 
   created() {
+    this.warning = debounce(() => {
+      this.$message.warning("网络异常，请稍后再试");
+    });
     this.sync();
 
     //更新购物车数据
-    this.updateCart = debounce((data) => {
-      if (localStorage.token) {
-        this.$axios.post("/user/sync_cart", JSON.stringify({ data })).catch()
-      }
+    this.syncCart = debounce((data) => {
+      syncCart({ data }).catch();
     });
 
     //更新收藏数据
     this.updateCollection = debounce((data) => {
-      if (localStorage.token) {
-        this.$axios.post("/user/update_collection", JSON.stringify({ data })).catch()
-      }
+      updateCollection({ data }).catch();
     });
 
     //更新浏览记录
     this.updateViewed = debounce((data) => {
-      if (localStorage.token) {
-        this.$axios.post("/user/update_viewed", JSON.stringify({ data })).catch()
-      }
+      updateViewed({ data }).catch();
     });
   },
   watch: {
@@ -113,31 +116,29 @@ export default {
     },
     "$store.state.shopList": {
       handler() {
-        this.updateCart(JSON.stringify(this.shopList));
+        if (localStorage.token) {
+          this.syncCart(JSON.stringify(this.shopList));
+        }
       },
       deep: true,
     },
     "$store.state.collectionList": {
       handler() {
-        this.updateCollection(JSON.stringify(this.collectionList));
+        if (localStorage.token) {
+          this.updateCollection(JSON.stringify(this.collectionList));
+        }
       },
       deep: true,
     },
     "$store.state.viewedList": {
       handler() {
-        this.updateViewed(JSON.stringify(this.viewedList));
-      },
-      deep: true,
-    },
-    "$store.state.isLogin": {
-      handler(newV) {
-        if (newV) console.log("已登录");
-        else {
-          console.log("已注销");
+        if (localStorage.token) {
+          this.updateViewed(JSON.stringify(this.viewedList));
         }
       },
       deep: true,
     },
+  
   },
 };
 </script>

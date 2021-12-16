@@ -17,13 +17,13 @@
       <input
         v-model="$v.phone.$model"
         :class="status($v.phone)"
-        type="number"
+        type="text"
         placeholder="手机号码"
         minlength="11"
         maxlength="11"
-        autocomplete="false"
         max="11"
         min="11"
+        autocomplete="false"
       />
     </div>
     <div>
@@ -42,18 +42,23 @@
     <div>
       <div class="desc">详细地址</div>
       <input
-        v-model="$v.address.$model"
-        :class="status($v.address)"
+        v-model="$v.currentAddress.$model"
+        :class="status($v.currentAddress)"
         type="text"
         placeholder="详细地址需填写街道楼栋楼层或房间号信息"
-        autocomplete="false"
         minlength="1"
         maxlength="32"
+        autocomplete="false"
       />
     </div>
 
-    <div id="submit_Btn" :class="btnIsActive" @click="submit">
-      <span>确认</span>
+    <div id="btns">
+      <div class="Btn delBtn" :class="btnIsActive" @click="deleteAddress">
+        <span>删除该地址</span>
+      </div>
+      <div class="Btn" :class="btnIsActive" @click="submit">
+        <span>确认</span>
+      </div>
     </div>
   </div>
 </template>
@@ -68,6 +73,10 @@ import {
 
 import { AreaSelect, AreaCascader } from "vue-area-linkage";
 import { pcaa } from "area-data";
+import { deleteAddress } from "network/user";
+import { mapState, mapMutations } from "vuex";
+
+import { selectAddress, updateAddress } from "network/user";
 
 export default {
   components: { AreaSelect, AreaCascader },
@@ -75,22 +84,43 @@ export default {
     return {
       pcaa: pcaa,
       selected: [],
-      address: "",
+      currentAddress: "",
       receiver: "",
       phone: "",
+      i: this.$route.query.i,
+      idx: 0,
     };
   },
+  created() {
+    selectAddress(this.i).then((data) => {
+      this.$nextTick(() => {
+        if (data.data.tag) {
+          this.$set(this, "selected", [
+            data.data.data[0].province,
+            data.data.data[0].city,
+          ]);
+          this.currentAddress = data.data.data[0].address;
+          this.receiver = data.data.data[0].receiver;
+          this.phone = data.data.data[0].phone;
+        } else {
+          this.$router.go(-1);
+        }
+      });
+    });
+  },
   computed: {
+    ...mapState(["address"]),
     btnIsActive() {
       return !this.$v.receiver.$invalid &&
         !this.$v.phone.$invalid &&
         this.selected.length &&
-        !this.$v.address.$invalid
+        !this.$v.currentAddress.$invalid
         ? "btn_active"
         : "btn";
     },
   },
   methods: {
+    ...mapMutations(["setAddress"]),
     status(validation) {
       return {
         error: validation.$error,
@@ -98,25 +128,48 @@ export default {
       };
     },
     submit() {
-      let address = this.address,
+      let address = this.currentAddress,
         phone = this.phone,
         receiver = this.receiver,
         province = this.selected[0],
-        city = this.selected[1];
+        city = this.selected[1],
+        i = this.i;
       let data = {
         address,
         phone,
         receiver,
         province,
         city,
+        i,
       };
-      this.$axios
-        .post("/user/add_address", JSON.stringify({ data }))
-        .then((r) => {
-          if (r.data.tag) {
-            this.$message.success("添加成功");
-            this.$router.go(-1);
+      updateAddress(JSON.stringify({ data })).then((r) => {
+        if (r.data.tag) {
+          this.$message.success("修改成功");
+          this.$emit("reloadAddress");
+          this.$router.go(-1);
+        }
+      });
+    },
+    deleteAddress() {
+      this.$confirm("确认删除该地址?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "info",
+      })
+        .then(() => {
+          if (this.i == this.address.i) {
+            this.setAddress({});
           }
+          deleteAddress({ i: this.i }).then((res) => {
+            if (res.data.tag) {
+              this.$message.success("删除成功");
+              this.$router.go(-1);
+              this.$emit("reloadAddress");
+            }
+          });
+        })
+        .catch((e) => {
+          this.$message("已取消删除");
         });
     },
   },
@@ -136,7 +189,7 @@ export default {
         return /^1[3-9]\d{9}$/.test(value);
       },
     },
-    address: {
+    currentAddress: {
       required,
       minLength: minLength(1),
       maxlength: maxLength(32),
@@ -153,11 +206,18 @@ export default {
   pointer-events: none;
 }
 
-#submit_Btn {
-  width: 90vw;
-  height: 60px;
+#btns {
+  display: flex;
+  flex-direction: row;
+  bottom: 0;
+  position: absolute;
+}
+
+.Btn {
+  width: 45vw;
+  height: 50px;
   border-radius: 35px;
-  margin: 30px auto;
+  margin: 10px auto;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -165,6 +225,9 @@ export default {
   color: whitesmoke;
 }
 
+.delBtn {
+  background-color: rgb(64, 158, 255);
+}
 .edit_address {
   display: flex;
   flex-direction: column;

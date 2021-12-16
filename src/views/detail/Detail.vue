@@ -1,6 +1,6 @@
 <template>
   <div class="detail">
-    <router-view />
+    <router-view/>
     <detail-nav-bar ref="navbar" @titleClick="titleClick" :cursor="cursor" />
 
     <scroll
@@ -8,7 +8,6 @@
       @ifBottom="ifBottom"
       @getPostionY="getPostionY"
       :backTimer="450"
-      extra="getPostionY"
       ref="scroll"
     >
       <detail-swiper :img="swiperImage" v-show="swiperImage" />
@@ -43,11 +42,17 @@
         @detailGoodResourceLoad="updateOffsetTop"
       />
 
-      <recommend ref="recommend" loadName="detailGoodResourceLoad" />
+      <recommend ref="recommend" />
     </scroll>
 
     <back-top @click.native="backTop" v-show="IsBottom"></back-top>
-    <detail-operation-bar @addShop="addGood" v-if="done" />
+    <detail-operation-bar
+      @addShop="addGood"
+      @buyNowGood="buyNowGood"
+      v-if="done"
+      :cover="cover"
+      :price="price"
+    />
   </div>
 </template>
 
@@ -71,7 +76,7 @@ import Recommend from "components/common/Recommend/Recommend";
 import { debounce } from "common/utils";
 
 //获取数据的格式
-import { Goods, Shop } from "network/detail";
+import { getGoodDetail, Goods, Shop } from "network/detail";
 
 //vuex映射
 import { mapGetters, mapMutations } from "vuex";
@@ -113,23 +118,25 @@ export default {
       done: false, //是否显示operationBar的标志
       goodObj: {}, //加入购物车所需信息
       shopId: null,
+      size: [],
+      cover: null,
+      price: 0,
     };
   },
   created() {
     this.goodId = this.$route.query.id;
 
     //获取商品详情页所需信息
-    this.$axios
-      .get(`/detail?id=${this.goodId}`)
+    getGoodDetail(this.goodId)
       .then((res) => {
         const info = res.data.data;
         this.swiperImage = info.itemInfo.topImages;
         this.shopInfo = new Shop(info.shopInfo);
         this.goodInfo = new Goods(info.itemInfo, info.columns, info.services);
-
+        this.price = this.goodInfo.realPrice;
         this.goodImages = info.detailInfo.detailImage[0].list;
+        this.cover = this.swiperImage[0];
         this.goodParams = info.itemParams;
-
         this.goodComment = info.rate.list ? info.rate.list : [];
         this.cartGoodInfo = {
           goodId: this.goodId,
@@ -137,7 +144,6 @@ export default {
           price: this.goodInfo.realPrice,
           title: this.goodInfo.title,
           cover: this.swiperImage[0],
-          discount: this.goodInfo.discount,
         };
         this.cartShopInfo = {
           shopId: info.shopInfo.shopId,
@@ -161,35 +167,15 @@ export default {
         }
       })
       .catch(() => {
-        // this.$router.go(-1);
-        // this.$message.warning("获取数据失败，请稍后刷新或检查网络问题");
+        this.$router.go(-1);
+        this.$message.warning("获取数据失败，请稍后刷新或检查网络问题");
       });
   },
   computed: {
     ...mapGetters(["goodsIfFull", "goodIfViewed"]),
   },
   mounted() {
-    //打开scrollup与backtop监听
-    this.$refs.scroll.openPullUp();
-    this.$refs.scroll.openBackTop();
-
     this.refreSher = this.$refs.scroll?.refresh;
-
-    // //使用防抖实时刷新高度
-    // this.updateOffsetTop = debounce(() => {
-    //   this?.refreSher();
-    //   //获取各标题的Y轴位置
-    //   if (this.$refs.params != undefined) {
-    //     this.tagsY[1] = this.$refs.params.$el.offsetTop - 44;
-    //   }
-
-    //   if (this.$refs.comment != undefined) {
-    //     this.tagsY[2] = this.$refs.comment.$el.offsetTop - 44;
-    //   }
-    //   if (this.$refs.recommend != undefined) {
-    //     this.tagsY[3] = this.$refs.recommend.$el.offsetTop - 84;
-    //   }
-    // }, 100);
 
     //使用防抖实时刷新高度
     this.updateOffsetTop = debounce(() => {
@@ -208,20 +194,15 @@ export default {
         }
       });
     }, 100);
+  },
 
-    this.$bus.$on("detailGoodResourceLoad", () => {
-      this.updateOffsetTop();
-    });
-  },
-  deactivated() {
-    this.$bus.$off("detailGoodResourceLoad");
-  },
   methods: {
     ...mapMutations([
       "addShop",
       "goodCollected",
       "goodUnCollect",
       "addGoodViewed",
+      "buyNow",
     ]),
     //是否可以开启backtop
     ifBottom(tag = false) {
@@ -249,13 +230,35 @@ export default {
       this.$refs.scroll.BackTop();
     },
 
-    addGood() {
+    addGood(count) {
       if (this.goodsIfFull) {
         this.$message.warning("购物车已满,添加失败,请先清空购物车");
       } else {
-        this.addShop({ ...this.goodObj });
+        this.goodObj.good["count"] = count;
+        this.addShop(this.goodObj);
         this.$message.success("加入购物车成功");
       }
+    },
+
+    buyNowGood(count) {
+      let buyNowGoodObj = {},
+        goods = {},
+        info = this.cartShopInfo;
+      goods[this.goodId] = {
+        count,
+        cover: this.cover,
+        goodId: this.goodId,
+        price: this.price,
+        title: this.goodInfo.title,
+      };
+      buyNowGoodObj[this.shopId] = {
+        goods,
+        info,
+      };
+      this.goodObj.good["count"] = count;
+      this.buyNow(buyNowGoodObj);
+
+      this.$router.push("/cart/confirm/1");
     },
   },
 

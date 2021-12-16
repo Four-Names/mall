@@ -1,15 +1,13 @@
 <template>
-  <nav-bar class="line">
+  <nav-bar class="line" :class="isSticky">
     <div slot="left" class="btn" @click="back">
       <img src="~assets/img/common/left-arrow.svg" alt="" />
     </div>
-    <div slot="center" class="center">
-      <slot name="content" />
-    </div>
+    <slot slot="center" name="content" />
 
     <div slot="right" class="btn">
       <img src="~assets/img/common/menu.svg" alt="" @click="menu" />
-      <div v-show="showMenu">
+      <div v-show="showMenu" class="main">
         <div class="triangle"></div>
         <div class="menu">
           <div class="row" @click="$router.push('/home')" v-if="home">
@@ -25,6 +23,7 @@
             <div class="desc">分类搜索</div>
           </div>
           <div class="row" @click="$router.push('/cart')" v-if="cart">
+          
             <img src="~assets/img/menu/cart.svg" alt="购物车" class="icon" />
             <div class="desc">购物车</div>
           </div>
@@ -110,6 +109,12 @@ export default {
         return false;
       },
     },
+    sticky: {
+      type: Boolean,
+      default() {
+        return false;
+      },
+    },
   },
   data() {
     return {
@@ -131,12 +136,20 @@ export default {
       window.addEventListener("click", fun, false);
     },
   },
+  computed: {
+    isSticky() {
+      return this.sticky ? "sticky" : "";
+    },
+  },
   deactivated() {
     this.showMenu = false;
   },
 };
 </script>
 <style scoped>
+
+
+
 .btn {
   display: flex;
   width: 60px;
@@ -146,6 +159,13 @@ export default {
   position: relative;
   z-index: 11;
 }
+
+.sticky {
+  position: fixed;
+  top: 0;
+  z-index: 11;
+}
+
 .triangle {
   top: 5vh;
   right: 22px;
@@ -154,6 +174,7 @@ export default {
   height: 0;
   border: 8px solid transparent;
   border-bottom: 8px solid rgba(25, 25, 25, 0.9);
+  z-index: 11;
 }
 
 .menu {
@@ -168,6 +189,7 @@ export default {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  z-index: 11;
 }
 
 .row {

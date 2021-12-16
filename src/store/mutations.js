@@ -10,71 +10,72 @@ from "common/localStorage"
 
 export default {
     //添加商店与商品
-    addShop(state, goodInfo) {
-        let {
-            shopId,
-            shop,
-            goodId,
-            good
-        } = goodInfo
+    addShop(state, {
+        shopId,
+        shop,
+        goodId,
+        good
+    }) {
         if (state.shopList.hasOwnProperty(shopId)) {
             if (state.shopList[shopId]['goods'].hasOwnProperty(goodId)) {
-                state.shopList[shopId]['goods'][goodId].count++
+                state.shopList[shopId]['goods'][goodId].count += good.count
                 Vue.set(state.shopList[shopId]['goods'][goodId], 'active', true)
 
             } else {
-                Vue.set(good, 'count', 1)
                 Vue.set(good, 'active', true)
-                Vue.set(state.shopList[shopId]['goods'], goodId, good)
+                Vue.set(state.shopList[shopId]['goods'], goodId, {
+                    ...good
+                })
                 state.shopList[shopId]['goodsSum']++
                     ++state.goodsNum;
             }
         } else {
-            Vue.set(state.shopList, shopId, {})
-            Vue.set(state.shopList[shopId], 'goods', {})
-            Vue.set(good, 'count', 1)
-            Vue.set(good, 'active', true)
-            Vue.set(state.shopList[shopId]['goods'], goodId, good)
-            Vue.set(state.shopList[shopId], 'shop', shop)
-            Vue.set(state.shopList[shopId], 'id', shopId)
-            Vue.set(state.shopList[shopId], 'goodsSum', 1)
-            Vue.set(state.shopList[shopId], 'active', true)
-            Vue.set(state.shopState, shopId, true)
-                ++state.goodsNum;
+            Vue.set(state.shopList, shopId, {});
+            Vue.set(state.shopList[shopId], 'goods', {});
+            Vue.set(good, 'active', true);
+            Vue.set(state.shopList[shopId]['goods'], goodId, {
+                ...good
+            });
+            Vue.set(state.shopList[shopId], 'shop', shop);
+            Vue.set(state.shopList[shopId], 'id', shopId);
+            Vue.set(state.shopList[shopId], 'goodsSum', 1);
+            Vue.set(state.shopList[shopId], 'active', true);
+            Vue.set(state.shopState, shopId, true);
+            ++state.goodsNum;
             ++state.shopNum;
             state.shopName.push(shopId)
         }
 
     },
-    
-    //商品数量加1
-    goodLess(state, target) {
-        const {
-            shopId,
-            goodId
-        } = target
-        state.shopList[shopId]['goods'][goodId].count--
-        Vue.set(state.shopList[shopId]['goods'][goodId], 'active', true)
-    },
 
     //商品数量减1
-    goodMore(state, target) {
-        const {
-            shopId,
-            goodId
-        } = target
+    goodLess(state, {
+        shopId,
+        goodId
+    }) {
+        Vue.set(state.shopList[shopId]['goods'][goodId], 'count', state.shopList[shopId]['goods'][goodId].count - 1);
         Vue.set(state.shopList[shopId]['goods'][goodId], 'active', true)
-        state.shopList[shopId]['goods'][goodId].count++
+
+    },
+
+    //商品数量加1
+    goodMore(state, {
+        shopId,
+        goodId
+    }) {
+
+        Vue.set(state.shopList[shopId]['goods'][goodId], 'active', true)
+        Vue.set(state.shopList[shopId]['goods'][goodId], 'count', state.shopList[shopId]['goods'][goodId].count + 1);
+
 
 
     },
 
     //删除商品
-    goodDelete(state, target) {
-        const {
-            shopId,
-            goodId
-        } = target
+    goodDelete(state, {
+        shopId,
+        goodId
+    }) {
         if (state.shopList[shopId]['goodsSum'] == 1) {
             this.commit('shopDelete', shopId)
         } else {
@@ -92,12 +93,23 @@ export default {
             --state.shopNum;
     },
 
+    //删除已提交订单商品
+    deleteOrderedGoods(state) {
+        let list = this.getters.getSelectedGood;
+        for (let shopId in list) {
+            for (let goodId in list[shopId].goods) {
+                this.commit('goodDelete', {
+                    goodId,
+                    shopId
+                })
+            }
+        }
+    },
+
     //全选店铺商品
     chooseAllGoods(state, shopId) {
         for (let good in state.shopList[shopId]['goods']) {
             Vue.set(state.shopList[shopId]['goods'][good], 'active', true)
-
-
         }
     },
 
@@ -123,35 +135,109 @@ export default {
     },
 
     //商品为选择状态
-    chooseGood(state, target) {
-        const {
-            shopId,
-            goodId
-        } = target
+    chooseGood(state, {
+        shopId,
+        goodId
+    }) {
         Vue.set(state.shopList[shopId]['goods'][goodId], 'active', true)
     },
     //商品为未选择状态
-    noChooseGood(state, target) {
-        const {
-            shopId,
-            goodId
-        } = target
+    noChooseGood(state, {
+        shopId,
+        goodId
+    }) {
         Vue.set(state.shopList[shopId]['goods'][goodId], 'active', false)
 
     },
 
+    //ifShopActive
+    deleteChosenGood(state) {
+        for (let shopId in state.shopList) {
+            if (this.getters.ifShopActive(shopId)) {
+                Object.keys(state.shopList[shopId].goods).map((goodId) => {
+                    this.commit('goodDelete', {
+                        goodId,
+                        shopId
+                    })
+                })
+            } else {
+                for (let goodId in state.shopList[shopId].goods) {
+                    if (this.getters.ifGoodActive({
+                            goodId,
+                            shopId
+                        })) {
+                        this.commit('goodDelete', {
+                            goodId,
+                            shopId
+                        })
+                    }
+                }
+            }
+        }
+    },
+
+
+    //收藏已选择商品
+    collectChosenGood(state) {
+        for (let shopId in state.shopList) {
+            if (this.getters.ifShopActive(shopId)) {
+                Object.keys(state.shopList[shopId].goods).map((goodId) => {
+                    let info = {
+                        good: state.shopList[shopId].goods[goodId],
+                        goodId,
+                        shop: state.shopList[shopId].shop,
+                        shopId,
+                    };
+
+                    this.commit('goodCollected', info)
+                })
+            } else {
+                for (let goodId in state.shopList[shopId].goods) {
+                    if (this.getters.ifGoodActive({
+                            goodId,
+                            shopId
+                        })) {
+                        let info = {
+                            good: state.shopList[shopId].goods[goodId],
+                            goodId,
+                            shop: state.shopList[shopId].shop,
+                            shopId,
+                        };
+                        this.commit('goodCollected', info)
+
+                    }
+                }
+            }
+        }
+    },
+
+    //取消收藏已选择商品
+    uncollectChosenGood(state) {
+        for (let shopId in state.shopList) {
+            if (this.getters.ifShopActive(shopId)) {
+                Object.keys(state.shopList[shopId].goods).map((goodId) => {
+                    this.commit('goodUnCollect', goodId)
+
+                })
+            } else {
+                for (let goodId in state.shopList[shopId].goods) {
+                    if (this.getters.ifGoodActive({
+                            goodId,
+                            shopId
+                        })) {
+                        this.commit('goodUnCollect', goodId)
+                    }
+                }
+            }
+        }
+    },
     //设置商品收藏状态
     goodCollected(state, target) {
 
-
-        let {
-            goodId
-        } = target
-
-        if (this.getters.goodIfCollected(goodId))
+        if (this.getters.goodIfCollected(target.goodId))
             return
 
-        Vue.set(state.collectionList, goodId, {
+        Vue.set(state.collectionList, target.goodId, {
             ...target
         })
 
@@ -166,12 +252,10 @@ export default {
 
 
     //加入浏览记录
-    addGoodViewed(state, target) {
-
-        let {
-            goodId,
-            info
-        } = target
+    addGoodViewed(state, {
+        goodId,
+        info
+    }) {
 
         if (this.getters.goodIfViewed(goodId))
             return
@@ -185,6 +269,10 @@ export default {
         }
     },
 
+    //设置收货地址
+    setAddress(state, address) {
+        Vue.set(state, 'address', address);
+    },
 
 
     //vuex数据改动时更新localStorage数据
@@ -197,7 +285,10 @@ export default {
             collectionList: state.collectionList,
             goodsNum: state.goodsNum,
             goodsMaxNum: state.goodsMaxNum,
-            viewedList: state.viewedList
+            viewedList: state.viewedList,
+            userInfo: state.userInfo,
+            address: state.address,
+            buyNowGood: state.buyNowGood,
         })
         setUserState(state.isLogin)
     },
@@ -210,17 +301,29 @@ export default {
             state.shopNum = userInfo.shopNum
             state.shopState = userInfo.shopState
             state.shopName = userInfo.shopName
-            state.collectionList = userInfo.collectionList,
-                state.goodsNum = userInfo.goodsNum
+            state.collectionList = userInfo.collectionList
+            state.goodsNum = userInfo.goodsNum
             state.goodsMaxNum = userInfo.goodsMaxNum
             state.viewedList = userInfo.viewedList
+            state.userInfo = userInfo.userInfo
+            state.address = userInfo.address
+            state.buyNowGood = userInfo.buyNowGood
         }
         state.isLogin = getUserState();
     },
 
+    //立即购买商品
+    buyNow(state, good) {
+        Vue.set(state, 'buyNowGood', good);
+    },
+
+    //清除立即购买商品数据
+    clearBought(state) {
+        Vue.set(state, 'buyNowGood', {});
+    },
+
     //设置登录状态
     setLogin(state, status) {
-        console.log('setLogin', status);
         state.isLogin = status;
     },
 
@@ -248,18 +351,14 @@ export default {
 
     //同步收藏数据
     syncCollection(state, data) {
-        let {
-            goodId
-        } = data;
-        Vue.set(state.collectionList, goodId, data)
+
+        Vue.set(state.collectionList, data.goodId, data)
     },
 
     //同步浏览记录
     syncViewed(state, data) {
-        let {
-            goodId
-        } = data;
-        Vue.set(state.viewedList, goodId, data)
+
+        Vue.set(state.viewedList, data.goodId, data)
     },
 
     //退出登录
@@ -274,7 +373,15 @@ export default {
         Vue.set(state, "goodsNum", 0)
         Vue.set(state, "goodsMaxNum", 99)
         Vue.set(state, "isLogin", false)
+        Vue.set(state, "userInfo", {})
+        Vue.set(state, "address", {})
         removeUserData()
-    }
+    },
+
+    //设置用户信息
+    setUserInfo(state, info) {
+        Vue.set(state, "userInfo", info);
+    },
+
 
 }

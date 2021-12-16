@@ -1,28 +1,17 @@
 <template>
   <div>
-    <item-nav-bar :path="path" :text="text" :close="close" />
-    <div v-show="hasContent">
-      <scroll
-        class="item-scroll"
-        :class="calcHight"
-        ref="scroll"
-        @ifBottom="ifBottom"
-        :backTimer="300"
-      >
-        <div class="item-list">
-          <item
-            v-for="(goodId, index) in ItemObj"
-            :goodId="index"
-            :goodObj="goodId"
-            :isEditing="isEditing"
-            :chooseGood="chooseGood"
-            :key="index"
-            @choosed="choosed"
-            @unchoosed="unchoosed"
-          />
-        </div>
-      </scroll>
-      <back-top class="backTop" @click.native="backTop" v-show="IsBottom" />
+    <item-nav-bar :path="path" :text="text" :close="close" @editing="edit" />
+    <div class="item-list" v-show="hasContent">
+      <item
+        v-for="(goodId, index) in ItemObj"
+        :goodId="index"
+        :goodObj="goodId"
+        :isEditing="isEditing"
+        :chooseGood="chooseGood"
+        :key="index"
+        @choosed="choosed"
+        @unchoosed="unchoosed"
+      />
     </div>
     <item-operation-bar
       v-show="isEditing"
@@ -33,7 +22,11 @@
       @chooseAll="chooseAll"
       @unChooseAll="unChooseAll"
     />
-    <div v-show="close" class="empty">空空如也</div>
+    <el-empty
+      style="background-color: rgb(242, 242, 242)"
+      v-show="close"
+      description="空空如也"
+    ></el-empty>
   </div>
 </template>
 
@@ -54,15 +47,9 @@ export default {
       goodChoosedList: [],
       isAllChoosed: false,
       chooseGood: false,
-      close: false,
     };
   },
   methods: {
-    //backTop是否显示的依据
-    ifBottom(tag = false) {
-      this.IsBottom = tag;
-    },
-
     //选择商品
     choosed(goodId) {
       this.goodChoosedList.push(goodId);
@@ -72,11 +59,6 @@ export default {
     unchoosed(goodId) {
       const idx = this.goodChoosedList.indexOf(goodId);
       this.goodChoosedList.splice(idx, 1);
-    },
-
-    //返回顶部
-    backTop() {
-      this.$refs.scroll.BackTop();
     },
 
     //处理对应的事件
@@ -94,21 +76,13 @@ export default {
     unChooseAll() {
       this.chooseGood = this.isAllChoosed = false;
     },
+
+    edit(editing) {
+      this.isEditing = editing;
+    },
   },
 
-  mounted() {
-    if (this.ItemObj) {
-      this.$refs.scroll.openBackTop();
-      this.$refs.scroll.openPullUp();
-    }
-    this.$refs.scroll?.refresh();
-
-    this.$bus.$on("editing", (isEditing) => {
-      this.isEditing = isEditing;
-    });
-
-    this.close = this.num == 0;
-  },
+  mounted() {},
   computed: {
     calcHight() {
       return this.isEditing ? "editing" : "noEditing";
@@ -119,18 +93,18 @@ export default {
     hasContent() {
       return this.ItemObj && !this.close;
     },
+    close() {
+      return this.num == 0;
+    },
   },
 
-  updated() {
-    this.$refs?.scroll.refresh();
-  },
+
   watch: {
     goodChoosedList(newV) {
       this.isAllChoosed = newV.length ? newV.length == this.num : false;
     },
     num(newV) {
       if (newV == 0) {
-        this.close = true;
         this.isEditing = false;
       }
     },
@@ -139,9 +113,9 @@ export default {
         this.chooseGood = false;
       }
     },
-    num(newV) {
-      this.close = newV == 0;
-    },
+  },
+  deactivated() {
+    this.isEditing = false;
   },
 };
 </script>
@@ -150,10 +124,8 @@ export default {
   display: flex;
   flex-direction: column;
   width: 100vw;
-}
-.item-scroll {
-  overflow: hidden;
-  z-index: 5;
+  padding-bottom: 7vh;
+  background-color: rgb(242, 242, 242);
 }
 
 .editing {
@@ -171,6 +143,4 @@ export default {
   color: gray;
   font-size: 1.2rem;
 }
-
-
 </style>

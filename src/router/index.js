@@ -13,12 +13,13 @@ const routes = [{
         path: '',
         redirect: '/home'
     },
+
     {
         path: '/cart',
         name: 'Cart',
         component: () => import("views/cart/Cart"),
         children: [{
-            path: 'confirm',
+            path: 'confirm/:type',
             name: 'ConfirmOrder',
             component: () => import('views/cart/pay/ConfirmOrder'),
             meta: {
@@ -50,7 +51,16 @@ const routes = [{
             {
                 path: 'order/:idx',
                 name: 'Order',
-                component: () => import("views/my/childCpn/order/MyOrder"),
+                component: () => import("views/my/order/MyOrder"),
+                meta: {
+                    requiresAuth: true
+                },
+
+            },
+            {
+                path: 'order_detail',
+                name: 'OrderDetail',
+                component: () => import("views/my/order/OrderDetail"),
                 meta: {
                     requiresAuth: true
                 },
@@ -58,7 +68,7 @@ const routes = [{
             {
                 path: 'setting',
                 name: 'Setting',
-                component: () => import("views/my/childCpn/setting/MySetting"),
+                component: () => import("views/my/setting/MySetting"),
                 meta: {
                     requiresAuth: true
                 },
@@ -66,14 +76,14 @@ const routes = [{
             {
                 path: 'address',
                 name: 'Address',
-                component: () => import("views/my/childCpn/address/Address"),
+                component: () => import("views/my/address/Address"),
                 meta: {
                     requiresAuth: true
                 },
                 children: [{
                         path: 'edit',
                         name: 'EditAddress',
-                        component: () => import("views/my/childCpn/address/EditAddress"),
+                        component: () => import("views/my/address/EditAddress"),
                         meta: {
                             requiresAuth: true
                         },
@@ -81,7 +91,7 @@ const routes = [{
                     {
                         path: 'add',
                         name: 'AddAddress',
-                        component: () => import("views/my/childCpn/address/AddAddress"),
+                        component: () => import("views/my/address/AddAddress"),
                         meta: {
                             requiresAuth: true
                         },
@@ -121,6 +131,15 @@ const routes = [{
         name: 'Register',
         component: () => import("views/user/Register"),
     },
+    {
+        path: '/search',
+        name: 'SearchPage',
+        component: () => import("views/search/SearchPage"),
+    },
+    {
+        path: "*",
+        redirect: '/home'
+    }
 
 ]
 

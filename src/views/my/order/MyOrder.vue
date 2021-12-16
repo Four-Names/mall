@@ -6,11 +6,11 @@
       :category="true"
       :my="true"
       :viewed="true"
+      :sticky="true"
     >
       <div slot="content">我的订单</div>
     </common-nav-bar>
     <div class="order_header">
-      <search message="搜索我的订单" class="search" />
       <div class="title">
         <div
           :class="activedIndex == 0 ? 'isActived' : ''"
@@ -36,73 +36,126 @@
         >
           已完成
         </div>
+        <div
+          :class="activedIndex == 4 ? 'isActived' : ''"
+          @click="activedIndex = 4"
+        >
+          已取消
+        </div>
       </div>
     </div>
-    <scroll>
-      <order-all v-if="activedIndex == 0" />
-      <order-pay v-if="activedIndex == 1" />
-      <order-receive v-if="activedIndex == 2" />
-      <order-completed v-if="activedIndex == 3" />
-    </scroll>
+    <div class="box">
+      <order-pay
+        v-if="activedIndex == 1 || activedIndex == 0"
+        @empty="isPayEmpty"
+      />
+      <order-receive
+        v-if="activedIndex == 2 || activedIndex == 0"
+        @empty="isReceiveEmpty"
+      />
+      <order-completed
+        v-if="activedIndex == 3 || activedIndex == 0"
+        @empty="isCompletedEmpty"
+      />
+      <order-cancel
+        v-if="activedIndex == 4 || activedIndex == 0"
+        @empty="isCancelEmpty"
+      />
+    </div>
+    <el-empty
+      style="background-color: rgb(242, 242, 242)"
+      v-show="isEmpty"
+      description="空空如也"
+    ></el-empty>
   </div>
 </template>
 
 <script>
-import Scroll from "components/common/Scroll/Scroll";
 import Search from "components/common/Search/Search";
 import CommonNavBar from "components/common/NavBar/CommonNavBar";
 
-import OrderAll from "./OrderAll";
+import OrderCancel from "./OrderCancel";
 import OrderReceive from "./OrderReceive";
 import OrderPay from "./OrderPay";
 import OrderCompleted from "./OrderCompleted";
 
 export default {
   components: {
-    Scroll,
     Search,
     CommonNavBar,
-    OrderAll,
+    OrderCancel,
     OrderReceive,
     OrderPay,
     OrderCompleted,
   },
   data() {
     return {
-      activedIndex: 0,
+      activedIndex: this.$route.params.idx,
+      empty: false,
+      payEmpty: false,
+      receiveEmpty: false,
+      completedEmpty: false,
+      cancelEmpty: false,
+      refreSher: null,
     };
   },
-  computed: {
-
-  },
-  methods: {},
   activated() {
     this.activedIndex = this.$route.params.idx;
-    console.log(this.activedIndex);
   },
-  mounted() {},
+  watch: {
+    activedIndex(newV) {
+      this.$router.replace(`/my/order/${newV}`);
+    },
+  },
+  computed: {
+    isEmpty() {
+      return (
+        this.payEmpty &&
+        this.receiveEmpty &&
+        this.completedEmpty &&
+        this.cancelEmpty &&
+        this.activedIndex == 0
+      );
+    },
+  },
+  methods: {
+    isPayEmpty(v) {
+      this.payEmpty = v;
+    },
+    isReceiveEmpty(v) {
+      this.receiveEmpty = v;
+    },
+    isCompletedEmpty(v) {
+      this.completedEmpty = v;
+    },
+    isCancelEmpty(v) {
+      this.cancelEmpty = v;
+    },
+  },
 };
 </script>
 <style scoped>
 .main {
-  background-color: rgb(247, 247, 247);
   width: 100vw;
-  height: 100vh;
+  background-color: rgb(242, 242, 242);
 }
 
 .order_header {
-  width: 95vw;
+  width: 100vw;
   display: flex;
   flex-direction: column;
-  padding: 1vh 2vw;
-  gap: 10px;
+  padding: 2vh 2vw;
   background-color: white;
   justify-content: center;
   align-items: center;
+  height: 6.3vh;
+  box-sizing: border-box;
+  position: fixed;
+  top: 6.7vh;
+  z-index: 2;
 }
 .search {
   width: 100%;
-  height: 6vh;
   border-radius: 18px;
 }
 
@@ -110,7 +163,6 @@ export default {
   display: flex;
   flex-direction: row;
   width: 90vw;
-  /* padding: 1vh 1.5vw; */
   height: 30px;
   justify-content: space-around;
   box-sizing: border-box;
@@ -118,5 +170,9 @@ export default {
 
 .isActived {
   border-bottom: 2px solid red;
+}
+
+.box {
+  padding-top: 13.4vh;
 }
 </style>

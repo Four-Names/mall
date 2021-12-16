@@ -51,6 +51,9 @@
 
 <script>
 import CommonNavBar from "components/common/NavBar/CommonNavBar";
+
+import { isValidPwd, updatePwd } from "network/user";
+
 export default {
   components: {
     CommonNavBar,
@@ -132,28 +135,24 @@ export default {
           let pwd = {
             pwd: this.form.oldPwd,
           };
-          this.$axios
-            .post("/user/valid_pwd", JSON.stringify(pwd))
-            .then(async (res) => {
-              if (res.data.tag) {
-                let pwd = {
-                  pwd: this.form.newPwd,
-                };
-                await this.$axios
-                  .post("/user/update_pwd", JSON.stringify(pwd))
-                  .then((res) => {
-                    if (res.data.tag) {
-                      this.$message.success("更新密码成功");
-                      this.$emit("done");
-                    } else {
-                      this.$message.warning("更新密码失败");
-                      this.$emit("done");
-                    }
-                  });
-              } else {
-                this.$message.error("密码错误");
-              }
-            });
+          isValidPwd(JSON.stringify(pwd)).then(async (res) => {
+            if (res.data.tag) {
+              let pwd = {
+                pwd: this.form.newPwd,
+              };
+              await updatePwd(JSON.stringify(pwd)).then((res) => {
+                if (res.data.tag) {
+                  this.$message.success("更新密码成功");
+                  this.$emit("done");
+                } else {
+                  this.$message.warning("更新密码失败");
+                  this.$emit("done");
+                }
+              });
+            } else {
+              this.$message.error("密码错误");
+            }
+          });
         } else {
           this.$message.warning("信息不合法");
         }

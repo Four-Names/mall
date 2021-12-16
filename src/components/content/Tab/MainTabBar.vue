@@ -1,6 +1,6 @@
 <template>
   <div>
-    <keep-alive exclude="Detail">
+    <keep-alive exclude="Detail,SearchPage,ConfirmOrder,Login,Register,Setting,Address,OrderDetail">
       <router-view ref="view"></router-view>
     </keep-alive>
 
@@ -30,7 +30,7 @@
       <tab-bar-item path="/cart">
         <div class="cart" slot="item-icon">
            <el-badge :value="goodsNum" :max="99" class="item">
-            <img src="~img/tabbar/cart_active.svg" alt="购物车" />
+            <img src="~img/tabbar/cart.svg" alt="购物车" />
           </el-badge>
         </div>
 

@@ -1,11 +1,11 @@
 <template>
   <div class="main">
-    <router-view />
+    <router-view @reloadAddress="reloadAddress" />
     <div v-if="main">
       <nav-bar>
         <img
           slot="left"
-          @click="$router.go(-1)"
+          @click="type"
           src="~assets/img/common/left-arrow.svg"
           alt=""
         />
@@ -44,8 +44,19 @@ import NavBar from "components/common/NavBar/NavBar";
 
 import Scroll from "components/common/Scroll/Scroll";
 
+import { getAddress } from "network/user";
+import { mapMutations } from "vuex";
+
 export default {
   components: { NavBar, Scroll },
+  props: {
+    props: {
+      type: Number,
+      default() {
+        return 0;
+      },
+    },
+  },
   data() {
     return {
       addresses: null,
@@ -58,8 +69,9 @@ export default {
     },
   },
   methods: {
-    getAddress() {
-      this.$axios.get("/user/address").then((res) => {
+    ...mapMutations(["setAddress"]),
+    reloadAddress() {
+      getAddress().then((res) => {
         this.$set(this, "addresses", res.data.data);
         this.$nextTick(() => {
           this.$refs.address?.refresh();
@@ -68,36 +80,34 @@ export default {
     },
     editAddress(i) {
       this.$router.push(`/my/address/edit?i=${i}`);
-      new Promise((resolve, reject) => {
-        this.$bus.$on("reloadAddress", () => {
-          this.getAddress();
-          resolve();
-        });
-      }).then(() => {
-        this.$bus.$off("reloadAddress");
-      });
     },
     addAddress() {
       this.$router.push("/my/address/add");
     },
     selected(address) {
       if (this.$route.query.pay == 1) {
-        this.$bus.$emit("getAddress", address);
+        this.setAddress(address);
+        this.$router.go(-1);
+      }
+    },
+    type() {
+      if (this.$route.query.pay == 2) {
+        if (!this.addresses) {
+          this.$message.warning("请先添加收货地址");
+        } else {
+          this.setAddress(this.addresses[0]);
+          this.$router.go(-1);
+        }
+      } else {
         this.$router.go(-1);
       }
     },
   },
   created() {
     if (this.$route.name == "Address")
-      this.$axios.get("/user/address").then((res) => {
+      getAddress().then((res) => {
         this.$set(this, "addresses", res.data.data);
-        this.$nextTick(() => {
-          this.$refs.address.openPullUp();
-        });
       });
-  },
-  activated() {
-    console.log("activated");
   },
 };
 </script>

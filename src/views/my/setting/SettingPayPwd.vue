@@ -58,6 +58,9 @@
 
 <script>
 import CommonNavBar from "components/common/NavBar/CommonNavBar";
+
+import { validPayPwd, setPayPwd } from "network/user";
+
 export default {
   components: {
     CommonNavBar,
@@ -86,49 +89,42 @@ export default {
             let pwd = {
               pwd: this.form.oldPwd,
             };
-            this.$axios
-              .post("/user/valid_pay_pwd", JSON.stringify(pwd))
-              .then(async (res) => {
-                if (res.data.tag) {
-                  let pwd = {
-                    pwd: this.form.newPwd,
-                  };
-                  this.$axios
-                    .post("/user/set_pay_pwd", JSON.stringify(pwd))
-                    .then((res) => {
-                      if (res.data.tag) {
-                        this.$message.success("设置成功");
-                        this.$emit("add");
-                        this.$emit("done");
-                      } else {
-                        this.$message.error("设置失败");
-                        this.$emit("done");
-                      }
-                    });
-                } else {
-                  this.$message.warning("支付密码错误");
-                }
-              });
+            validPayPwd(JSON.stringify(pwd)).then(async (res) => {
+              if (res.data.tag) {
+                let pwd = {
+                  pwd: this.form.newPwd,
+                };
+                setPayPwd(JSON.stringify(pwd)).then((res) => {
+                  if (res.data.tag) {
+                    this.$message.success("设置成功");
+                    this.$emit("add");
+                    this.$emit("done");
+                  } else {
+                    this.$message.error("设置失败");
+                    this.$emit("done");
+                  }
+                });
+              } else {
+                this.$message.warning("支付密码错误");
+              }
+            });
           } else {
             let pwd = {
               pwd: this.form.newPwd,
             };
-            console.log(this.newPwd);
-            this.$axios
-              .post("/user/set_pay_pwd", JSON.stringify(pwd))
-              .then((res) => {
-                if (res.data.tag) {
-                  this.$message.success("设置成功");
-                  this.$emit("add");
-                  this.$emit("done");
-                } else {
-                  this.$message.error("设置失败");
-                  this.$emit("done");
-                }
-              });
+            setPayPwd(JSON.stringify(pwd)).then((res) => {
+              if (res.data.tag) {
+                this.$message.success("设置成功");
+                this.$emit("add");
+                this.$emit("done");
+              } else {
+                this.$message.error("设置失败");
+                this.$emit("done");
+              }
+            });
           }
         } else {
-          this.$message.warning("信息不合法");
+          this.$message.warning("密码不合法");
           return false;
         }
       });

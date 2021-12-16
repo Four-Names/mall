@@ -10,11 +10,6 @@ export function getGoodDetail(id) {
 }
 
 
-export function getGoodRecommend() {
-    return BaseConfig({
-        url: "/recommend",
-    })
-}
 
 export class Goods {
     constructor(itemInfo, columns, services) {

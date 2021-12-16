@@ -50,7 +50,6 @@ export default {
 
   computed: {
     ifChoosed() {
-      console.log(this.hasChoosed);
       return this.hasChoosed ? "isChoosed" : ["noChoosed", "lock"];
     },
 

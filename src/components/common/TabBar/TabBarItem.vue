@@ -1,5 +1,5 @@
 <template>
-  <div class="tab-bar-item" @click="itemClick">
+  <div class="tab-bar-item" @click="$router.push(path)">
     <div class="icon" v-if="!isActive">
       <slot name="item-icon" />
     </div>
@@ -27,12 +27,6 @@ export default {
     return {
       Active: false,
     };
-  },
-  methods: {
-    itemClick() {
-      if (!this.$route.path.includes(this.path))
-        this.$router.replace(this.path);
-    },
   },
   computed: {
     isActive() {

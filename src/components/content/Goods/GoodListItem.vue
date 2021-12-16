@@ -11,7 +11,7 @@
     <p>{{ goodsItem.title }}</p>
 
     <div class="good-info">
-      <span>{{ parseFloat(goodsItem.price) }}￥</span>
+      <span>{{ parseFloat(goodsItem.price) }}¥</span>
       <img src="~img/common/collect.svg" alt="" />
       <span>{{ goodsItem.cfav }}</span>
     </div>
@@ -28,12 +28,6 @@ export default {
       type: Object,
       default() {
         return null;
-      },
-    },
-    loadName: {
-      type: String,
-      default() {
-        return "";
       },
     },
   },
@@ -54,19 +48,16 @@ export default {
     },
   },
   created() {
-    this.load = debounce(this.imgload);
+    this.load = debounce(()=>{
+      this.$emit('loadGood')
+    },1);
   },
   methods: {
     //转到对应的页面
     itemClick() {
-      // console.log(this.$route,this.$router);
       this.$router.push({ path: "/detail", query: { id: this.id } });
     },
 
-    //事件总线分发图片加载事件
-    imgload() {
-      this.$bus.$emit(this.loadName);
-    },
   },
 };
 </script>

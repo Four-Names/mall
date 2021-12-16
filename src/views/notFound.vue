@@ -13,7 +13,6 @@ export default {
   methods: {},
   created() {},
   mounted() {
-      console.log('404');
   },
 };
 </script>

@@ -8,7 +8,12 @@
         @ifBottom="ifBottom"
         :backTimer="300"
       >
-        <item-nav-bar text="购物车" :close="cartIsEmpty" class="line" />
+        <item-nav-bar
+          text="购物车"
+          :close="cartIsEmpty"
+          @editing="edit"
+          class="line"
+        />
         <cart-login-bar v-if="!isLogin" />
         <div class="content" v-if="!isLogin">
           <div>
@@ -16,7 +21,6 @@
           </div>
           <p>登录后可同步购物车中商品</p>
         </div>
-
         <div class="goodList" v-if="shopNum">
           <cart-shop-good
             v-for="(shop, index) in shopList"
@@ -26,14 +30,24 @@
             ref="goodList"
           />
         </div>
+        <div v-else>
+          <el-empty
+            style="background-color: rgb(242, 242, 242)"
+            description="空空如也"
+          ></el-empty>
+        </div>
         <recommend
           ref="recommend"
-          :loadName="RecommendLoad"
           v-show="!isEditing || !shopNum"
+          @loadGood="refreSher"
         />
       </scroll>
       <back-top class="backTop" @click.native="backTop" v-show="IsBottom" />
-      <cart-operation-bar ref="checkOut" v-show="!cartIsEmpty" />
+      <cart-operation-bar
+        ref="checkOut"
+        v-show="!cartIsEmpty"
+        :editing="isEditing"
+      />
     </div>
   </div>
 </template>
@@ -60,10 +74,9 @@ export default {
       goodRecommend: null,
       RecommendLoad: "refresh",
       IsBottom: false,
-      refresher: null,
+      refreSher: {},
       close: false,
       isEditing: false,
-      msg: null,
     };
   },
   components: {
@@ -78,23 +91,15 @@ export default {
   computed: {
     ...mapGetters(["cartIsEmpty"]),
     ...mapState(["shopList", "isLogin", "shopNum"]),
-    main(){
-      return this.$route.name == 'Cart';
-    }
+    main() {
+      return this.$route.name == "Cart";
+    },
   },
   mounted() {
-    this.close = this.$refs.scroll.openBackTop();
-    this.$refs.scroll.openPullUp();
-
-    // this.refresher = debounce(this.$refs.scroll?.refresh);
-    this.refresher = debounce(() => {
+    this.refreSher = debounce(() => {
       this.$nextTick(() => {
         this.$refs.scroll?.refresh();
       });
-    });
-
-    this.$bus.$on(this.RecommendLoad, () => {
-      this?.refresher();
     });
   },
   methods: {
@@ -105,27 +110,24 @@ export default {
     ifBottom(tag = false) {
       this.IsBottom = tag;
     },
+    edit(isEditing) {
+      this.isEditing = isEditing;
+    },
   },
+
   activated() {
-    this.refresher?.();
-    if (this.cartIsEmpty) {
-      this.msg = this.$message("购物车空空如也");
-    }
+    this.refreSher?.();
     if (!localStorage.token) {
       this.setLogin(false);
     }
-    this.$bus.$on("editing", (isEditing) => {
-      this.isEditing = isEditing;
-    });
   },
+
   deactivated() {
-    this.posY = this.$refs.scroll.getY();
-    this.$bus.$off("editing");
-    this.msg?.close();
+    this.isEditing = false;
   },
   //刷新BS
   updated() {
-    this?.refresher();
+    this?.refreSher();
   },
 };
 </script>

@@ -1,5 +1,5 @@
 <template>
-  <div class="father">
+  <div class="father" v-if="banners.length">
     <div id="swiper">
       <swiper :options="swiperOption" ref="mySwiper">
         <swiper-slide v-for="(item, id) in banners" :key="id" class="img">

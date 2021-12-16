@@ -67,6 +67,14 @@ import ItemNavBar from "components/common/Items/ItemNavBar";
 import { required, minLength, sameAs, email } from "vuelidate/lib/validators";
 import { mapGetters, mapState } from "vuex";
 
+import {
+  validCode,
+  register,
+  sendCode,
+  hasUser,
+  hasEmail,
+} from "network/register";
+
 export default {
   components: { ItemNavBar },
   data() {
@@ -129,46 +137,40 @@ export default {
   },
   methods: {
     register() {
-      console.log(this.email, this.code);
-      this.$axios
-        .post(
-          "/register/validCode",
-          JSON.stringify({ code: this.code, email: this.email })
-        )
-        .then((res) => {
-          if (res.data.tag) {
-            let data = {
-              nickname: this.nickname,
-              email: this.email,
-              password: this.password,
-              username: this.username,
-            };
-            this.$axios.post("/register", JSON.stringify(data)).then((res) => {
-              console.log("register", res);
-              if (res.data.tag) {
-                if (!this.isLogin) {
-                  this.$confirm("注册成功,是否现在登录?", "提示", {
-                    confirmButtonText: "确定",
-                    cancelButtonText: "取消",
-                    type: "warning",
+      validCode(this.code, this.email).then(async (res) => {
+        if (res.data.tag) {
+          let data = {
+            nickname: this.nickname,
+            email: this.email,
+            password: this.password,
+            username: this.username,
+          };
+          await register(data).then(async (res) => {
+            if (res.data.tag) {
+              if (!this.isLogin) {
+                await this.$confirm("注册成功,是否现在登录?", "提示", {
+                  confirmButtonText: "确定",
+                  cancelButtonText: "取消",
+                  type: "warning",
+                })
+                  .then(() => {
+                    this.$router.push({ path: "/login" });
                   })
-                    .then(() => {
-                      this.$router.push({ path: "/login" });
-                    })
-                    .catch((e) => {
-                      this.$message("已取消删除");
-                    });
-                }
+                  .catch((e) => {
+                    this.$message("已取消删除");
+                  });
+              } else {
                 this.$message.success("注册成功");
                 this.$router.go(-1);
-              } else {
-                this.$message.error("注册失败,请稍候重试");
               }
-            });
-          } else {
-            this.$message.error("验证码错误");
-          }
-        });
+            } else {
+              this.$message.error("注册失败,请稍候重试");
+            }
+          });
+        } else {
+          this.$message.error("验证码错误");
+        }
+      });
     },
     status(validation) {
       return {
@@ -178,40 +180,28 @@ export default {
     },
     postCode() {
       this.checkValid().then((res) => {
-        console.log("res", res);
         if (res) {
-          this.$axios
-            .get(
-              `/register/mailer?type=注册&username=${this.username}&email=${this.email}`
-            )
-            .then((res) => {
-              console.log("res", res);
-              if (res.data.tag) {
-                this.isSended = true;
-                this.$message.success("已发送邮箱验证码");
-              } else {
-                this.$message.error("发送邮箱验证码失败,请重试");
-              }
-            });
+          sendCode(this.username, this.email).then((res) => {
+            console.log("res", res);
+            if (res.data.tag) {
+              this.isSended = true;
+              this.$message.success("已发送邮箱验证码");
+            } else {
+              this.$message.error("发送邮箱验证码失败,请重试");
+            }
+          });
         }
       });
     },
     checkValid() {
-      let hasUser = this.$axios
-        .get(`/register/has_user?username=${this.username}`)
-        .then((res) => {
-          console.log(res, "has_user");
+      return Promise.all([
+        hasUser(this.username).then((res) => {
           return res.data.tag;
-        });
-
-      let hasEmail = this.$axios
-        .get(`/register/has_email?email=${this.email}`)
-        .then((res) => {
-          console.log(res, "has_email");
+        }),
+        hasEmail(this.email).then((res) => {
           return res.data.tag;
-        });
-
-      return Promise.all([hasUser, hasEmail]).then((res) => {
+        }),
+      ]).then((res) => {
         if (res[0] && res[1]) {
           this.$message.error("该用户名与邮箱已被注册");
           return false;
@@ -252,17 +242,6 @@ export default {
       required,
       minLength: minLength(6),
     },
-  },
-  created() {},
-  mounted() {
-    console.log(
-      this.$v.nickname.$invalid,
-      this.$v.username.$invalid,
-      this.$v.password.$invalid,
-      this.$v.repeatPassword.$invalid,
-      this.$v.email.$invalid,
-      this.$v.repeatPassword.$model
-    );
   },
 };
 </script>

@@ -21,9 +21,9 @@
         placeholder="手机号码"
         minlength="11"
         maxlength="11"
+        autocomplete="false"
         max="11"
         min="11"
-        autocomplete="false"
       />
     </div>
     <div>
@@ -46,9 +46,9 @@
         :class="status($v.address)"
         type="text"
         placeholder="详细地址需填写街道楼栋楼层或房间号信息"
+        autocomplete="false"
         minlength="1"
         maxlength="32"
-        autocomplete="false"
       />
     </div>
 
@@ -69,6 +69,8 @@ import {
 import { AreaSelect, AreaCascader } from "vue-area-linkage";
 import { pcaa } from "area-data";
 
+import { addAddress } from "network/user";
+
 export default {
   components: { AreaSelect, AreaCascader },
   data() {
@@ -78,22 +80,7 @@ export default {
       address: "",
       receiver: "",
       phone: "",
-      i: this.$route.query.i,
     };
-  },
-  created() {
-    console.log(this.i, "params");
-    this.$axios.get(`/user/one_address?i=${this.i}`).then((data) => {
-      this.$nextTick(() => {
-        this.$set(this, "selected", [
-          data.data.data[0].province,
-          data.data.data[0].city,
-        ]);
-        this.address = data.data.data[0].address;
-        this.receiver = data.data.data[0].receiver;
-        this.phone = data.data.data[0].phone;
-      });
-    });
   },
   computed: {
     btnIsActive() {
@@ -104,9 +91,6 @@ export default {
         ? "btn_active"
         : "btn";
     },
-  },
-  mounted() {
-    console.log("AddressAdd", this.type, this.info);
   },
   methods: {
     status(validation) {
@@ -120,26 +104,21 @@ export default {
         phone = this.phone,
         receiver = this.receiver,
         province = this.selected[0],
-        city = this.selected[1],
-        i = this.i;
+        city = this.selected[1];
       let data = {
         address,
         phone,
         receiver,
         province,
         city,
-        i,
       };
-      this.$axios
-        .post("/user/update_address", JSON.stringify({ data }))
-        .then((r) => {
-          console.log("address", r);
-          if (r.data.tag) {
-            this.$message.success("修改成功");
-            this.$bus.$emit('reloadAddress');
-            this.$router.go(-1);
-          }
-        });
+      addAddress(JSON.stringify({ data })).then((r) => {
+        if (r.data.tag) {
+          this.$emit("reloadAddress");
+          this.$message.success("添加成功");
+          this.$router.go(-1);
+        }
+      });
     },
   },
 

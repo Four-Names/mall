@@ -3,7 +3,7 @@
     <category-nav-bar class="line" />
 
     <div class="category_main">
-      <scroll class="category" ref="category" :scrollBar="false">
+      <div class="category">
         <category-left-bar
           v-for="(item, index) in Categorys"
           :key="index"
@@ -14,9 +14,9 @@
           :ref="'category' + index"
           @loadCategory="loadCategory"
         />
-      </scroll>
+      </div>
 
-      <scroll class="goods" ref="goods">
+      <scroll class="goodCategory" ref="goods">
         <div v-show="this.categoryViews" class="good">
           <category-right-bar
             v-for="(view, index) in categoryViews"
@@ -32,7 +32,7 @@
           v-if="type"
           :goods="CurrentGoods"
           class="specific"
-          :loadName="loadName"
+          @loadGood="done"
         />
       </scroll>
     </div>
@@ -49,6 +49,11 @@ import GoodList from "components/content/Goods/GoodList";
 import TabControl from "components/content/Tab/TabControl";
 
 import { debounce } from "common/utils";
+import {
+  getCategory,
+  getCategoryGoods,
+  getCategoryGoodsDetail,
+} from "network/category";
 
 export default {
   name: "Category",
@@ -59,7 +64,6 @@ export default {
       categoryViews: null,
       maitKey: null,
       miniWallkey: null,
-      loadName: "specificGood",
       goods: {
         pop: [],
         new: [],
@@ -82,36 +86,21 @@ export default {
     TabControl,
   },
   created() {
-    this.getCategory()
-      .then((res) => {
-        this.Categorys = res.data.data;
-        this.chooseCategory = 0;
-      })
-      .catch();
+    getCategory().then((res) => {
+      this.Categorys = res.data.data;
+      this.chooseCategory = 0;
+    });
     //防抖doneView
     this.done = debounce(this.doneView);
   },
 
-  mounted() {
-    //打开bs
-    this.$refs.category.openPullUp();
-    this.$refs.goods.openPullUp();
-  },
   activated() {
-    this.$refs.category?.refresh();
     this.$refs.goods?.refresh();
+  },
 
-    this.$bus.$on(this.loadName, () => {
-      this.done();
-    });
-  },
-  deactivated() {
-    this.$bus.$off(this.loadName);
-  },
   methods: {
     //初始化设置默认值
     doneCategory() {
-      this.$refs.category.refresh();
       this.$refs["category" + 0][0].choosed = true;
       this.maitKey = this.Categorys[0].maitKey;
       this.miniWallkey = this.Categorys[0].miniWallkey;
@@ -136,33 +125,19 @@ export default {
 
     //加载type商品信息
     loadType() {
-      const popT = this.getCategoryGoodsDetail(this.miniWallkey, "pop");
-      const newT = this.getCategoryGoodsDetail(this.miniWallkey, "new");
-      const sellT = this.getCategoryGoodsDetail(this.miniWallkey, "sell");
+      const popT = getCategoryGoodsDetail(this.miniWallkey, "pop");
+      const newT = getCategoryGoodsDetail(this.miniWallkey, "new");
+      const sellT = getCategoryGoodsDetail(this.miniWallkey, "sell");
       Promise.all([popT, newT, sellT])
         .then((res) => {
           this.goods["pop"] = res[0].data.data;
           this.goods["new"] = res[1].data.data;
           this.goods["sell"] = res[2].data.data;
         })
-        .catch(() => {
-          // this.$message.warning("获取数据失败，请稍后刷新或检查网络问题");
-        });
+        .catch();
     },
     isEnd(index) {
       return this.Categorys.length - 1 == index;
-    },
-
-    getCategory() {
-      return this.$axios.get(`/category`);
-    },
-    getCategoryGoods(maitKey) {
-      return this.$axios.get(`/category/detail?maitKey=${maitKey}`);
-    },
-    getCategoryGoodsDetail(miniWallkey, type) {
-      return this.$axios.get(
-        `/category/detail/good?miniWallkey=${miniWallkey}&type=${type}`
-      );
     },
   },
   computed: {
@@ -183,15 +158,11 @@ export default {
 
     //改变时获取对应的数据
     maitKey(newV) {
-      this.getCategoryGoods(newV)
-        .then((res) => {
-          this.categoryViews = res.data.data;
-          if (this.$refs.goods) this.$refs.goods.BackTop();
-          this.loadType();
-        })
-        .catch(() => {
-          // this.$message.warning("获取数据失败，请稍后刷新或检查网络问题");
-        });
+      getCategoryGoods(newV).then((res) => {
+        this.categoryViews = res.data.data;
+        if (this.$refs.goods) this.$refs.goods.BackTop();
+        this.loadType();
+      });
     },
   },
 };
@@ -200,18 +171,28 @@ export default {
 .category_main {
   width: 100vw;
   display: flex;
-  /* height: calc(100vh - 97px); */
   height: 85.9vh;
-  overflow: hidden;
   background-color: white;
+  overflow: scroll;
+  flex-direction: row;
 }
 
 .category {
   width: 25%;
   background-color: rgb(240, 240, 240);
+  height: 85.9vh;
+  position: fixed;
+  z-index: 1;
+  overflow: scroll;
 }
 
-.goods {
+.goodCategory {
+  margin-left: 25%;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+.specific {
   width: 100%;
 }
 

@@ -22,14 +22,21 @@
     </div>
     <div>
       <div v-show="isEditing" class="feature-btn">
-        <div class="btn" @click="collect" v-if="isLogin"><span>加入收藏</span></div>
+        <div class="btn" @click="collect" v-if="isLogin">
+          <span>加入收藏</span>
+        </div>
         <div class="btn" @click="remove"><span>删除</span></div>
       </div>
     </div>
 
     <div v-show="!isEditing" class="price-check">
-      <p>总计:￥{{ formatPrice }}</p>
-      <span class="checkstand" :class="ifCanCheck" @click="$router.push('/cart/confirm')">去结算{{ reCount }}件</span>
+      <p>总计:¥{{ formatPrice }}</p>
+      <span
+        class="checkstand"
+        :class="ifCanCheck"
+        @click="$router.push('/cart/confirm/0')"
+        >去结算({{ countHint }})件</span
+      >
     </div>
   </div>
 </template>
@@ -43,18 +50,25 @@ export default {
       isEditing: false,
     };
   },
-  activated() {
-    this.$bus.$on("editing", (isEditing) => {
-      this.isEditing = isEditing;
-    });
+  props: {
+    editing: {
+      type: Boolean,
+      default() {
+        return false;
+      },
+    },
   },
   deactivated() {
-    this.$bus.$off("editing");
     this.isEditing = false;
+  },
+  watch: {
+    editing(newV) {
+      this.isEditing = newV;
+    },
   },
   computed: {
     ...mapGetters(["ifAllShopChoosed", "reCount"]),
-    ...mapState(["shopNum", "totalPrice","isLogin"]),
+    ...mapState(["shopNum", "totalPrice", "isLogin"]),
 
     //是否锁定按钮
     ifLock() {
@@ -63,21 +77,39 @@ export default {
 
     //格式化价格
     formatPrice() {
-      return parseFloat(this.totalPrice).toFixed(2);
+      return this.totalPrice.toFixed(2);
     },
 
     //依据已选商品件数切换样式
     ifCanCheck() {
       return this.reCount > 0 ? "checked" : "check-lock";
     },
+
+    countHint() {
+      return this.reCount >= 99 ? 99 + "+" : this.reCount;
+    },
   },
   methods: {
-    ...mapMutations(["chooseAllShop", "unChooseAllShop"]),
-    remove() {
-      this.$bus.$emit("executeDelete");
-    },
+    ...mapMutations([
+      "chooseAllShop",
+      "unChooseAllShop",
+      "deleteChosenGood", //删除所选商品
+      "collectChosenGood", //收藏所选商品
+      "uncollectChosenGood", //取消收藏所选商品
+    ]),
     collect() {
-      this.$bus.$emit("executeCollect");
+      this.collectChosenGood();
+      this.$message.success("收藏成功");
+    },
+    remove() {
+      this.$confirm("确认删除?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "info",
+      }).then(() => {
+        this.deleteChosenGood();
+        this.$message.success("删除成功");
+      });
     },
   },
 };

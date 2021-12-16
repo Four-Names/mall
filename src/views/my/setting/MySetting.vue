@@ -52,7 +52,9 @@ import CommonNavBar from "components/common/NavBar/CommonNavBar";
 import SettingLoginPwd from "./SettingLoginPwd";
 import SettingPayPwd from "./SettingPayPwd";
 import { mapMutations } from "vuex";
-import { getUserInfo, setUserInfo } from "common/localStorage";
+import { getUserInfo, setUserInfo ,clearUserInfo} from "common/localStorage";
+
+import { hasPayPwd,rename} from "network/user";
 
 export default {
   components: {
@@ -68,7 +70,7 @@ export default {
     };
   },
   methods: {
-    ...mapMutations(["logout"]),
+    ...mapMutations(["logout", "setUserInfo"]),
     logOut() {
       this.$confirm("是否退出当前账户?", "退出登录", {
         confirmButtonText: "确定",
@@ -77,7 +79,9 @@ export default {
         type: "info",
       })
         .then(() => {
+          clearUserInfo()
           this.logout();
+          clearUserInfo();
           this.$router.push("/home");
         })
         .catch(() => {
@@ -94,18 +98,17 @@ export default {
           let nickname = {
             nickname: v.value,
           };
-          await this.$axios
-            .post("/user/set_nickname", JSON.stringify(nickname))
-            .then((res) => {
-              if (res.data.tag) {
-                let userInfo = getUserInfo();
-                userInfo.nickname = v.value;
-                setUserInfo(userInfo);
-                this.$message.success("更改昵称成功");
-              } else {
-                this.$message.error("更改昵称失败");
-              }
-            });
+          await rename(JSON.stringify(nickname)).then((res) => {
+            if (res.data.tag) {
+              let userInfo = getUserInfo();
+              userInfo.nickname = v.value;
+              setUserInfo(userInfo);
+              this.setUserInfo(userInfo);
+              this.$message.success("更改昵称成功");
+            } else {
+              this.$message.error("更改昵称失败");
+            }
+          });
         })
         .catch(() => {
           this.$message("已取消");
@@ -122,7 +125,7 @@ export default {
     },
   },
   created() {
-    this.$axios.post("/user/has_pay_pwd").then((res) => {
+    hasPayPwd().then((res) => {
       this.hasPayPwd = res.data.tag;
     });
   },
@@ -130,11 +133,10 @@ export default {
     msg() {
       return this.hasPayPwd ? "已设置" : "未设置";
     },
-    main(){
-      return this.$route.name == 'Setting';
-    }
+    main() {
+      return this.$route.name == "Setting";
+    },
   },
-
 };
 </script>
 <style scoped>

@@ -26,9 +26,8 @@
       :key="index"
       :goodInfo="good"
       :shopId="shopId"
+      :shop="shop"
       class="goods"
-      @Uncollect="Uncollect"
-      @Collect="Collect"
     />
   </div>
 </template>
@@ -67,28 +66,7 @@ export default {
       "goodCollected",
       "goodUnCollect",
     ]),
-    Collect(goodId) {
-      this.goodCollected(this.getCartGoodInfo(goodId));
 
-      this.$message.success("收藏成功");
-    },
-
-    Uncollect(goodId) {
-      this.$message.success("取消收藏");
-      this.goodUnCollect(goodId);
-    },
-
-    //获取加入购物车所需要的信息
-    getCartGoodInfo(goodId) {
-      //提取对应的商品信息
-      let good = this.shopInfo.goods[goodId];
-      return {
-        good: good,
-        goodId: goodId,
-        shop: this.shopInfo.shop,
-        shopId: this.shopId,
-      };
-    },
   },
   computed: {
     ...mapGetters(["ifShopActive"]),
